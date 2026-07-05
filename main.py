@@ -6,14 +6,14 @@ from measurements.runCalibrationAIM import RunCalibrationAIM
 
 def print_menu():
 
-    print()
+    print("")
     print("=============== Тест AIM ===============")
     print("1. Информация о калибровке")
     print("2. Тест платы")
     print("3. Калибровка платы")
     print("4. Выход")
     print("========================================")
-
+    print("")
 
 def main():
 

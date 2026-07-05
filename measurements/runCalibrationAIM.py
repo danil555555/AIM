@@ -1,4 +1,5 @@
-
+from calculate import CalcSafeOffsetsGen
+from measure import *
 
 def RunCalibrationAIM(context):
 
@@ -13,6 +14,7 @@ def RunCalibrationAIM(context):
     moduleUMax = context["moduleUMax"]
     fileName = context["fileName"]
     Delta = 0.2
+
     first_start = True
     old_moduleName = ''
     old_DNP = ''
@@ -34,7 +36,7 @@ def RunCalibrationAIM(context):
     # Reset calibration
     calbGain = np.ones(moduleChannels, dtype=float)
     calbOffset = np.zeros(moduleChannels, dtype=float)
-    WriteCalibrate(ctd1620, fileName, calbGain, calbOffset)
+    WriteCalibrate(logfile, ctd1620, fileName, calbGain, calbOffset)
 
     generator.SetupChannel(1, wform='DC')
     agilent.ConnectChan(9)  # Работаем с 9 каналом для измерений текущего напряжения напрямую с генератора
@@ -43,7 +45,7 @@ def RunCalibrationAIM(context):
     out1, in1 = MeasurePointAIM(logfile, ctd1620, agilent, generator, moduleChannels, OffsetMax, Delta, "Измерение 1: верхняя точка калибровки")
     out2, in2 = MeasurePointAIM(logfile, ctd1620, agilent, generator, moduleChannels, OffsetMin, Delta, "Измерение 2: нижняя точка калибровки")
 
-    CalcCoefCalibration(logfile, out1, out2, in1, in2)
+    CalcCoefCalibration(logfile, ctd1620, fileName, out1, out2, in1, in2)
 
     in3 = CheckDcMeasureAIM(logfile, ctd1620, agilent, generator, moduleChannels, Offset, Delta, moduleInput)
     in4 = CheckAcMeasureAIM(logfile, ctd1620, agilent, generator, moduleChannels, Offset, Delta)

@@ -1,3 +1,12 @@
+import cv2
+from pylibdmtx import pylibdmtx
+from playsound import playsound
+
+
+old_moduleName = ''
+old_DNP = ''
+
+IsScanned = '../Resource/IsScanned.mp3'
 
 def ManualInput(name):
     NAME = input('Введите NAME'+'['+name['Name']+']')

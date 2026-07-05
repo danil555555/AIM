@@ -3,6 +3,7 @@ from tools.Agilent34401A import *
 from tools.TGA1240 import *
 from scanQR.scan_markers import ScanDataMatrix
 from eeprom.eeprom import *
+from measurements.printInfo import *
 
 SlotNumber = 0
 

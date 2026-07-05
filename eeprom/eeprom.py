@@ -1,3 +1,11 @@
+import struct, sys
+import datetime
+import os
+from measurements.printInfo import *
+from measurements import conv_cfg_mem
+
+SlotNumber = 0
+TIMEOUT_RESTART = 3
 
 #-----------------------------------------------------------------------------
 def findtag(data,ftag):
@@ -99,17 +107,17 @@ def packCalibrate(Gain, Offset):
     return calb
 
 #------------------------------------------------------------------------------
-def WriteCalibrate(ctd1620, fileName, calbGain, calbOffset):
+def WriteCalibrate(out, ctd1620, fileName, calbGain, calbOffset):
     calb = packCalibrate(calbGain, calbOffset)
     outfile = open(fileName + '.calb', 'wb')
     outfile.write(calb)
     outfile.close()
     ret = ctd1620.WriteEPROM(0, SlotNumber, 1, calb)
     if ret != True:
-        Print(logfile, "FAILED")
+        Print(out, "FAILED")
         exit(1)
-    Print(logfile, "SUCCESSFUL")
-    Print(logfile, "")
+    Print(out, "SUCCESSFUL")
+    Print(out, "")
     ctd1620.Restart(TIMEOUT_RESTART)
 
 
@@ -224,27 +232,65 @@ def ReadCalibrate(data):
 
     return date, np.array(gains), np.array(offsets)
 
-def GetCalibParam(ctd1620, SlotNumber):
+def GetCalibParam(ctd1620, SlotNumber, moduleName):
+    
+    REFERENCE_OFFSETS = {
+    "AIM-812": 12100.0,
+    "AIM-813": -12100.0,
+    "AIM-801": 0.0,
+    "AIM-804": 0.0,
+    }
 
-   calbInfo = ctd1620.ReadEPROM(0, SlotNumber, 1)
-   calbDate, oldGain, oldOffset = ReadCalibrate(calbInfo)
-   if oldGain is not None:
+    thresholdGain = 0.1
+    thresholdOffsetMv = 100
+
+    calbInfo = ctd1620.ReadEPROM(0, SlotNumber, 1)
+    calbDate, oldGain, oldOffset = ReadCalibrate(calbInfo)
+
+    if oldGain is not None and oldOffset is not None:
         print("Калибровочные коэффициенты из EEPROM")
         print("Дата калибровки:", calbDate)
-        print("----------------------------------------")
-        print("Канал | Gain       | Offset")
-        print("----------------------------------------")
-        for i in range(len(oldGain)):
-            print(
-                "CH" + str(i + 1).zfill(2) + "  | " +
-                "{0:9.3f}".format(oldGain[i]) + "  | " +
-                "{0:9.3f}".format(oldOffset[i])
-            )
-        print("----------------------------------------")
-   else:
-        print("Калибровочные коэффициенты не найдены")
 
-   return oldGain, oldOffset
+        header = (f"{'CH':<6} | "
+             f"{'Gain':>9} | "
+             f"{'Offset, mV':>12} | "
+             f"{'Result':>10} | "
+             )
+        
+        print(header)
+        print("-" * len(header))
+        result = []
+        for i in range(len(oldGain)):
+
+            if moduleName not in REFERENCE_OFFSETS:
+                raise ValueError("Неизвестный тип платы: " + str(moduleName))
+            else:
+                refOffset = REFERENCE_OFFSETS[moduleName]
+
+            gain_result = abs(oldGain[i] - 1) <= thresholdGain
+            offset_result = abs(oldOffset[i] - refOffset) <= thresholdOffsetMv
+
+            if gain_result and offset_result:
+                result.append("OK")
+            else:
+                result.append("FAILED")
+
+            line = (
+            f"{'CH' + str(i + 1).zfill(2):<6} | "
+            f"{oldGain[i]:>9.3f} | "
+            f"{oldOffset[i]:>9.3f} | "
+            f"{result[i]:>10} | "
+            )
+
+            print(line)
+            print("-" * len(header))
+            
+        if all(value == "OK" for value in result):
+            print("Результат проверки калибровочных коэффициентов: SUCCESSFUL")
+        else:
+            print("Результат проверки калибровочных коэффициентов: FAILED")
+    else:
+        print("Калибровочные коэффициенты не найдены")
 
 def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):  
     #есть вопросы
