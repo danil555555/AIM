@@ -1,0 +1,15 @@
+TYPE,'AIM '          # Module type
+NAME,'AIM-801'       # Module name
+DNP:,'801117191P'    # Design Number Product
+DATE,'18.10.2019'    # Date of manufacturing
+SERL,1001            # Serial Number
+CHNS,8               # Number of channels
+ITYP,1               # Input type: 1 - +-10V, 2 - 0..-20V, 3 - IEPE
+INPT,'VOLT'          # Input: IEPE, VOLT
+UMIN,-10.0           # Minimal input voltage
+UMAX,10.0            # Maximal input voltage
+FMIN,0.0             # Minimal input frequency
+FMAX,20000.0         # Maximal input frequency
+CMNT,'Analog Input Module 8 channels'
+INFO,0x10000,0x010001,0x010002,0x010003,0x010100,0x010101,0x010102,0x010103
+

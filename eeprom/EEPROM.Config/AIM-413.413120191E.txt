@@ -1,0 +1,14 @@
+TYPE,'AIM '          # Module type
+NAME,'AIM-413'       # Module name
+DNP:,'413120191E'    # Design Number Product
+DATE,'04.03.2021'    # Date of manufacturing
+SERL,1001            # Serial Number
+CHNS,4               # Number of channels
+ITYP,3               # Input type: 1 - +-10V, 2 - 0..-20V, 3 - IEPE
+INPT,'IEPE'          # Input: IEPE, VOLT
+UMIN,0.0             # Minimal input voltage
+UMAX,20.0            # Maximal input voltage
+FMIN,0.0             # Minimal input frequency
+FMAX,20000.0         # Maximal input frequency
+CMNT,'Analog Input Module 4 channels'
+INFO,0x10000,0x010001,0x010002,0x010003

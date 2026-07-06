@@ -1,0 +1,11 @@
+TYPE,'BPM '          # Module type
+NAME,'BPM-422'       # Module name
+DNP:,'422144193P'    # Design Number Product
+SERL,1001            # Serial Number
+SIZE,42              # Size of modelu [HP]
+SLTA,4               # Number of slots for analog modules
+SLTE,2               # Number of slots for extension modules
+DATE,'16.04.2019'    # Production date 
+CMNT,'Back Plain Module 4-2-42hp'
+INFO,0x1000f,0x20003 # Slots mask: 4 analog slots 2 extend slots 
+STBL,0x00080000,0x00090100,0x000a0001,0x000b0101,0x000c0002,0x000d0102,0x000e0003,0x000f0103

@@ -1,0 +1,15 @@
+TYPE,'AIM '          # Module type
+NAME,'AIM-211'       # Module name
+DNP:,'211104201E'    # Design Number Product
+DATE,'01.10.2020'    # Date of manufacturing
+SERL,1001            # Serial Number
+CHNS,2               # Number of channels
+ITYP,1               # Input type: 1 - +-10V, 2 - 0..-20V, 3 - IEPE
+INPT,'VOLT'          # Input: IEPE, VOLT
+UMIN,-10.0           # Minimal input voltage
+UMAX,10.0            # Maximal input voltage
+FMIN,0.0             # Minimal input frequency
+FMAX,20000.0         # Maximal input frequency
+CMNT,'Analog Input Module 2 channels'
+INFO,0x10000,0x010001
+

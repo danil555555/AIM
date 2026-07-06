@@ -1,0 +1,11 @@
+TYPE,'BPM '          # Module type
+NAME,'BPM-203'       # Module name
+DNP:,'203136191E'    # Design Number Product
+SERL,1001            # Serial Number
+SIZE,28              # Size of modelu [HP]
+SLTA,2               # Number of slots for analog modules
+SLTE,0               # Number of slots for extension modules
+DATE,'15.01.2020'    # Production date 
+CMNT,'Back Plain Module 2-0-28hp'
+INFO,0x10003,0x20000 # Slots mask: 4 analog slots 0 extend slots 
+STBL,0x00080000,0x00090100,0x000a0001,0x000b0101
