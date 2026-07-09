@@ -8,4 +8,5 @@ def GetCalibrationInfoAIM(context):
     SlotNumber = context["SlotNumber"]
     moduleName = context["moduleName"]
 
-    GetCalibParam(ctd1620, SlotNumber, moduleName)
+    result = GetCalibParam(ctd1620, SlotNumber, moduleName)
+    return result

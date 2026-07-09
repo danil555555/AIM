@@ -289,8 +289,11 @@ def GetCalibParam(ctd1620, SlotNumber, moduleName):
             print("Результат проверки калибровочных коэффициентов: SUCCESSFUL")
         else:
             print("Результат проверки калибровочных коэффициентов: FAILED")
+        return True
+    
     else:
         print("Калибровочные коэффициенты не найдены")
+        return False 
 
 def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):  
     #есть вопросы

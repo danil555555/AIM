@@ -26,7 +26,6 @@ def RunCalibrationAIM(context):
     SaySuccessful = '../Resource/TestIsSuccessful.mp3'
     TIMEOUT_RESTART = 3
     
-    testIsOk = True
 
     OffsetMax, OffsetMin, Offset, Delta = CalcSafeOffsetsGen(moduleUMin, moduleUMax, moduleInput, Delta)
 
@@ -53,18 +52,4 @@ def RunCalibrationAIM(context):
     CheckDcMeasureAuxAim(logfile, agilent, generator, Offset, moduleChannels, in3, moduleType)
     CheckAcMeasureAuxAim(logfile, agilent, generator, Offset, moduleChannels, in4, moduleType)
 
-    Print(logfile, "End".center(75, '-'))
-    logfile.close()
 
-    ctd1620.Disconnect()
-
-   # Отправка лога и двоичного файла на ftp сервер
-    post_report.post_report(fileName+'.log')
-    post_report.post_report(fileName+'.calb')
-
-   #Учет результатов проверки
-
-    if testIsOk == True:
-        playsound(SaySuccessful)
-    else:
-        playsound(SayFailed)

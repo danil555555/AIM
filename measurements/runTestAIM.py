@@ -14,7 +14,7 @@ def RunTestAIM(context):
     moduleUMax = context["moduleUMax"]
     fileName = context["fileName"]
     Delta = 0.2
-
+    testIsOk = True
 
     OffsetMax, OffsetMin, Offset, Delta = CalcSafeOffsetsGen(moduleUMin, moduleUMax, moduleInput, Delta)
 
@@ -37,3 +37,19 @@ def RunTestAIM(context):
    #Проверка проверка буфферных выходов AIM на AC
 
     CheckAcMeasureAuxAim(logfile, agilent, generator, Offset, moduleChannels, in4, moduleType)
+
+    Print(logfile, "End".center(75, '-'))
+    logfile.close()
+
+    ctd1620.Disconnect()
+
+   # Отправка лога и двоичного файла на ftp сервер
+    post_report.post_report(fileName+'.log')
+    post_report.post_report(fileName+'.calb')
+
+   #Учет результатов проверки
+
+    if testIsOk == True:
+        playsound(SaySuccessful)
+    else:
+        playsound(SayFailed)
