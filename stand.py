@@ -1,32 +1,25 @@
 from tools.CTD1620 import *
-from tools.Agilent34401A import *
-from tools.TGA1240 import *
 from scanQR.scan_markers import ScanDataMatrix
 from eeprom.eeprom import *
 from measurements.printInfo import *
 
 SlotNumber = 0
 
-def PrepareStand():
+def PrepareStand(agilent, generator):
 
     print("Подготовка стенда")
-
-    agilent = Agilent34401A("COM6")
-    agilent.SetMeasurement("VOLT:DC")
-
-    generator = TGA1240("COM4")
-    generator.SetupChannel(1, wform='DC')
-
-    ctd1620 = CTD1620("10.0.0.2")
 
     SlotNumber = 0
 
     print("Распознавание наклейки AIM-XXX.\n m - ручной ввод \n ESC - выйти")
     AIM = ScanDataMatrix('AIM')
     WaitPressEnter("1. Вставьте плату, подключите AUX\n2. Нажмите Enter")
-    print("===========Connect===========")
+    print("===========Подключение к CTD-1620===========")
+    ctd1620 = CTD1620("10.0.0.2")
     ctd1620.Connect()
-    print("==========Read info==========")
+    print("===========Подключено===========")
+    print("==========Чтение информации с платы AIM==========")
+
     # Чтение информации из памяти платы
     (
         moduleInfo,
@@ -44,6 +37,10 @@ def PrepareStand():
         fileName,
         logfile
     ) = PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName)
+ # Если инфо есть проверить соотвесиве с Qr, если не согласуется дать варианты действия - перезаписать или прекратить 
+ # если инфа есть ее можно оставить, или имя серийник dnp
+# если нет инфы идем штатно  
+
 
     context = {
         "AIM": AIM,

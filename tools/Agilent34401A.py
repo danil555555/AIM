@@ -19,16 +19,34 @@ class Agilent34401A:
 #------------------------------------------------------------------------------
     def __init__(self, port):
         self.port = port
-        self.serial = serial.Serial(port,
-                                    baudrate=9600,
-                                    parity=serial.PARITY_NONE, 
-                                    stopbits=serial.STOPBITS_ONE,
-#                                    xonxoff=True,
-                                    timeout=2
-        )
-        self.serial.flushInput() # On Python 3 "reset_input_buffer()"
-        self.Remote()
-        self.ClearStatus()
+        self.serial = None
+
+#------------------------------------------------------------------------------ 
+    def Connect(self):
+        try: 
+            self.serial = serial.Serial(self.port,
+                                        baudrate=9600,
+                                        parity=serial.PARITY_NONE, 
+                                        stopbits=serial.STOPBITS_ONE,
+    #                                    xonxoff=True,
+                                        timeout=2
+            )
+            self.serial.flushInput() # On Python 3 "reset_input_buffer()"
+            self.Remote()
+            self.ClearStatus()
+            return True
+
+        except serial.SerialException as error:
+            print("Ошибка подключения к Agilent34401A:", error)
+
+            if self.serial is not None:
+                try:
+                    self.serial.close()
+                except:
+                    pass
+
+        self.serial = None
+        return False
 
 #------------------------------------------------------------------------------
     def scpi_comm(self, command):
