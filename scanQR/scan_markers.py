@@ -9,15 +9,15 @@ old_DNP = ''
 IsScanned = '../Resource/IsScanned.mp3'
 
 def ManualInput(name):
-    NAME = input('Введите NAME'+'['+name['Name']+']')
+    NAME = input('Введите NAME: ')
     if len(NAME)==0:
          NAME = name['Name']
-    DNP  = input('Введите DNP:'+'['+name['DNP']+ ']')
+    DNP  = input('Введите DNP: ')
     if len(DNP)==0:
          DNP = name['DNP']
-    SN   = input('ВВедите SN:')
+    SN   = input('ВВедите SN: ')
     print(NAME+','+DNP+','+SN)
-    return { "Name": NAME, "DNP": DNP, "SN": SN }         
+    return { "Name": NAME, "DNP": DNP, "SN": SN }
 
 
 def ScanDataMatrix(name):

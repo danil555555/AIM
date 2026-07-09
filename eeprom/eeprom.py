@@ -247,7 +247,8 @@ def GetCalibParam(ctd1620, SlotNumber, moduleName):
     calbInfo = ctd1620.ReadEPROM(0, SlotNumber, 1)
     calbDate, oldGain, oldOffset = ReadCalibrate(calbInfo)
 
-    if oldGain is not None and oldOffset is not None:
+    #if oldGain is not None and oldOffset is not None:
+    if oldGain is not None:
         print("Калибровочные коэффициенты из EEPROM")
         print("Дата калибровки:", calbDate)
 

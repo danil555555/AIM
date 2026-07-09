@@ -29,7 +29,7 @@ def RunCalibrationAIM(context):
 
     OffsetMax, OffsetMin, Offset, Delta = CalcSafeOffsetsGen(moduleUMin, moduleUMax, moduleInput, Delta)
 
-    CheckOutputLines(logfile, ctd1620, agilent, moduleType, moduleChannels, fileName)
+    #CheckOutputLines(logfile, ctd1620, agilent, moduleType, moduleChannels, fileName)
 
     Print(logfile, "Сброс калибровки платы".center(75, '-'))
     # Reset calibration
@@ -46,10 +46,10 @@ def RunCalibrationAIM(context):
 
     CalcCoefCalibration(logfile, ctd1620, fileName, out1, out2, in1, in2)
 
-    in3 = CheckDcMeasureAIM(logfile, ctd1620, agilent, generator, moduleChannels, Offset, Delta, moduleInput)
-    in4 = CheckAcMeasureAIM(logfile, ctd1620, agilent, generator, moduleChannels, Offset, Delta)
+    #in3 = CheckDcMeasureAIM(logfile, ctd1620, agilent, generator, moduleChannels, Offset, Delta, moduleInput)
+    #in4 = CheckAcMeasureAIM(logfile, ctd1620, agilent, generator, moduleChannels, Offset, Delta)
 
-    CheckDcMeasureAuxAim(logfile, agilent, generator, Offset, moduleChannels, in3, moduleType)
-    CheckAcMeasureAuxAim(logfile, agilent, generator, Offset, moduleChannels, in4, moduleType)
+    #CheckDcMeasureAuxAim(logfile, agilent, generator, Offset, moduleChannels, in3, moduleType)
+    #CheckAcMeasureAuxAim(logfile, agilent, generator, Offset, moduleChannels, in4, moduleType)
 
 

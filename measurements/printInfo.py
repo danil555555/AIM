@@ -141,7 +141,7 @@ def PrintArrayCompareTable(out, title, reference, measured, result, threshold = 
    Print(out, "Погрешность: +/-" + "{0:.3f}".format(threshold) + " мВ")
    Print(out, "")
    Print(out, header)
-   #Print(out, "Канал | Мультиметр, мВ | AIM, мВ | Ошибка, мВ | Погрешность измерения, % | Результат ")
+   #Print(out, "Канал | Мультиметр, мВ | AIM, мВ | Отклонение, мВ | Погрешность, % | Результат ")
    Print(out, "-" * len(header))
 
    for i in range(0, len(measured)):
