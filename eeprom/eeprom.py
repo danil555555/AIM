@@ -296,7 +296,7 @@ def GetCalibParam(ctd1620, SlotNumber, moduleName):
         print("Калибровочные коэффициенты не найдены")
         return False 
 
-def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):  
+def PrepareModuleInfo(ctd1620, SlotNumber, AIM, AimQr, first_start, old_moduleName):  
     #есть вопросы
     """
     Читает/обновляет EEPROM платы, получает параметры модуля,
@@ -347,13 +347,13 @@ def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):
     moduleUMin, moduleUMax = GetModuleVoltage(moduleInfo)
 
     # 5. Запись EEPROM обратно в плату
-    if len(sys.argv) <= 1:
-        res = ctd1620.WriteEPROM(0, SlotNumber, 0, moduleInfo)
+    #if len(sys.argv) <= 1:
+        #res = ctd1620.WriteEPROM(0, SlotNumber, 0, moduleInfo)
 
-        if not res:
-            quit('Не могу записать информацию в плату')
+        #if not res:
+            #quit('Не могу записать информацию в плату')
 
-        ctd1620.HWRestart()
+        #ctd1620.HWRestart()
 
     # 6. Проверка, что серия плат одного типа
     if not first_start and (moduleType != old_moduleName):

@@ -189,6 +189,7 @@ def CheckThreshold(out,values, threshold): #проверка прохожден�
 
 #------------------------------------------------------------------------------
 def CheckGain(out, gains, threshold):
+    
     gainDelta = max( abs(max(gains) - 1.0), abs(min(gains) - 1.0))
     if (gainDelta >= threshold):
         Print(out, "Gain FAILED " + "{0:.3f}".format(gainDelta))
@@ -196,7 +197,7 @@ def CheckGain(out, gains, threshold):
     return True
 
 def MeasurePointAIM(out, ctd1620, agilent, generator, moduleChannels, offsetGen, delta, title):
-    
+
     Print(out, title.center(75, '-'))
     generator.SetOffset(offsetGen)
     Print(out, "Параметры генератора: DC - " + f"{offsetGen}" + "V")
@@ -204,7 +205,19 @@ def MeasurePointAIM(out, ctd1620, agilent, generator, moduleChannels, offsetGen,
     WaitStable(ctd1620, agilent, moduleChannels, delta=delta)
     mult, AIMVolt = Measure(ctd1620, agilent, moduleChannels, average=10, delta=delta / 2.0)
     result = MeasureResult(mult, AIMVolt, delta)
-    PrintArrayCompareTable(out, "", mult, AIMVolt, result, threshold=delta / 2)
+    #PrintArrayCompareTable(out, "", mult, AIMVolt, result, threshold=delta / 2)
+    Print(out, f"Напряжение на мультиметре {mult}, mV")
+    header = (
+            f"{'Канал':<6} | "
+            f"{'Напряжение AIM':>18}" 
+        )
+    for i in range(0, len(AIMVolt)):
+        line = (
+            f"{'CH' + str(i+1).zfill(2):<6} | "
+            f"{AIMVolt[i]:>18.3f}"
+        )
+        Print(out, line)
+
     return mult, AIMVolt
 
 def CalcCoefCalibration(out, ctd1620, fileName, mult1, mult2, AIMVolt1, AIMVolt2):

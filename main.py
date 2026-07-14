@@ -7,6 +7,9 @@ from measurements.runCalibrationAIM import RunCalibrationAIM
 from tools.Agilent34401A import *
 from tools.TGA1240 import *
 
+from colorama import init
+init()
+
 def print_menu():
 
     print("")
@@ -42,9 +45,12 @@ def main():
     generator = TGA1240("COM4")
     generator.SetupChannel(1, wform='DC')
 
+    first_start = True
+    old_moduleName = ""
+
     while True:
 
-        context = PrepareStand(agilent, generator) # подготовка стенда к работе. Возвращает все данные об АИМ 
+        context = PrepareStand(agilent, generator, first_start, old_moduleName) # подготовка стенда к работе. Возвращает все данные об АИМ 
         
         if not GetCalibrationInfoAIM(context):
             RunCalibrationAIM(context)
@@ -57,9 +63,5 @@ def main():
         # Стандартная инициализация - если нет коэф, сразу запустить RunCalibrationAIM, 
         # 
         # если есть коэф то 
-        
-  
-
-
 if __name__ == "__main__":
     main()

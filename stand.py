@@ -2,10 +2,11 @@ from tools.CTD1620 import *
 from scanQR.scan_markers import ScanDataMatrix
 from eeprom.eeprom import *
 from measurements.printInfo import *
+from AIM import *
 
 SlotNumber = 0
 
-def PrepareStand(agilent, generator):
+def PrepareStand(agilent, generator, first_start, old_moduleName):
 
     print("Подготовка стенда")
 
