@@ -235,18 +235,20 @@ def CalcCoefCalibration(out, ctd1620, fileName, mult1, mult2, AIMVolt1, AIMVolt2
          result_3.append('OK')
          error_gain.append(value-1)
 
-   PrintChannelMeasureTable(out, "Коэффициент усиления", calbGain, error_gain, result_3)
+   PrintChannelMeasureTable(out, "Gain", calbGain, error_gain, result_3)
    
    result_4 = []
    for i in range(len(calbOffset)):
       result_4.append("OK")
 
-   PrintChannelMeasureTable(out, "Смещение", calbOffset, -calbOffset, result_4)
+   PrintChannelMeasureTable(out, "OffsetAim", calbOffset, -calbOffset, result_4)
 
    testIsOk = CheckGain(out, calbGain, 0.1)
 
    if testIsOk != True:
        playsound(SayFailed)
+
+   return testIsOk
 
    #-----------------------------------------------------
    #запись калибровочного коэффициента в плату
@@ -275,7 +277,13 @@ def CheckDcMeasureAIM(out, ctd1620, agilent, generator, moduleChannels, offsetGe
            result_5.append('OK')
 
    PrintArrayCompareTable(out, "", out3, in3, result_5, threshold_dc)
-   return in3
+
+   if all(r == "OK" for r in result_5):
+       result = "OK"
+   else:
+       result = "FAILED"
+
+   return in3, result
 
 def CheckAcMeasureAIM(out, ctd1620, agilent, generator, moduleChannels, offsetGen, delta):
    
@@ -299,7 +307,12 @@ def CheckAcMeasureAIM(out, ctd1620, agilent, generator, moduleChannels, offsetGe
 
 
    PrintArrayCompareTable(out, "", out4, in4, result_6, 3.0) #local def
-   return in4
+
+   if all(r == "OK" for r in result_6):
+       result = "OK"
+   else:
+       result = "FAILED"
+   return in4, result
 
 def CheckDcMeasureAuxAim(out, agilent, generator, offsetGen, moduleChannels , in3, moduleType):
    
@@ -318,6 +331,13 @@ def CheckDcMeasureAuxAim(out, agilent, generator, offsetGen, moduleChannels , in
    result_7 = AuxMeasureResult(in3, out5, 50.0)
    PrintArrayCompareTable(out, "", in3, out5, result_7, 50.0)
 
+   if all(r == "OK" for r in result_7):
+       result = "OK"
+   else:
+       result = "FAILED"
+
+   return result
+
 def CheckAcMeasureAuxAim(out, agilent, generator, offsetGen, moduleChannels , in4, moduleType):
    
    Print(out, "Проверка AUX выходо по переменному напряжению".center(75, '-'))
@@ -331,7 +351,14 @@ def CheckAcMeasureAuxAim(out, agilent, generator, offsetGen, moduleChannels , in
      out6 = lineread(out,agilent,moduleChannels,inout=10)
 
    result_8 = AuxMeasureResult(in4,out6, 30.0)
-   test6 = PrintArrayCompareTable(out, "", in4, out6, result_8, 30.0)
+   PrintArrayCompareTable(out, "", in4, out6, result_8, 30.0)
+
+   if all(r == "OK" for r in result_8):
+       result = "OK"
+   else:
+       result = "FAILED"
+
+   return result
 
 def CheckOutputLines(out, ctd1620, agilent, moduleType, moduleChannels, fileName):
     ctd1620.Disconnect()

@@ -24,19 +24,19 @@ def RunTestAIM(context):
     agilent.ConnectChan(9)  # Работаем с 9 каналом для измерений текущего напряжения напрямую с генератора
     agilent.SetMeasurement("VOLT:DC")
 
-    in3 = CheckDcMeasureAIM(logfile, ctd1620, agilent, generator, moduleChannels, Offset, Delta, moduleInput)
+    in3, checkDcMeasureResult = CheckDcMeasureAIM(logfile, ctd1620, agilent, generator, moduleChannels, Offset, Delta, moduleInput)
 
    #-----------------------------------------------------
-    in4 = CheckAcMeasureAIM(logfile, ctd1620, agilent, generator, moduleChannels, Offset, Delta)
+    in4, checkAcMeasureResult = CheckAcMeasureAIM(logfile, ctd1620, agilent, generator, moduleChannels, Offset, Delta)
 
    #Проверка проверка буфферных выходов AIM на DC
    #-----------------------------------------------------
 
-    CheckDcMeasureAuxAim(logfile, agilent, generator, Offset, moduleChannels, in3, moduleType)
+    checkDcMeasureAuxResult = CheckDcMeasureAuxAim(logfile, agilent, generator, Offset, moduleChannels, in3, moduleType)
 
    #Проверка проверка буфферных выходов AIM на AC
 
-    CheckAcMeasureAuxAim(logfile, agilent, generator, Offset, moduleChannels, in4, moduleType)
+    checkAcMeasureAuxResult = CheckAcMeasureAuxAim(logfile, agilent, generator, Offset, moduleChannels, in4, moduleType)
 
     Print(logfile, "End".center(75, '-'))
     logfile.close()
@@ -48,8 +48,17 @@ def RunTestAIM(context):
     post_report.post_report(fileName+'.calb')
 
    #Учет результатов проверки
+    if(checkDcMeasureResult == "OK" and 
+       checkAcMeasureResult == "OK" and 
+       checkDcMeasureAuxResult == "OK" and 
+       checkAcMeasureAuxResult == "OK"):
+        testIsOk == True
+    else:
+        testIsOk == False
 
     if testIsOk == True:
         playsound(SaySuccessful)
     else:
         playsound(SayFailed)
+    
+    return testIsOk

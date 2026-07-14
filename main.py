@@ -8,6 +8,7 @@ from tools.Agilent34401A import *
 from tools.TGA1240 import *
 
 from colorama import init
+
 init()
 
 def print_menu():
@@ -20,7 +21,7 @@ def print_menu():
     print("========================================")
     print("")
 
-def Choise(context):
+def Choice(context):
     print_menu()
 
     choice = input("Введите цифру действия: ").strip()
@@ -35,7 +36,7 @@ def Choise(context):
         print("Завершение работы")
 
     else:
-        print("Ошибка, нужно выбрать пункт 1-4")
+        print("Ошибка, нужно выбрать пункт 1-3")
 
 def main():
 
@@ -52,11 +53,62 @@ def main():
 
         context = PrepareStand(agilent, generator, first_start, old_moduleName) # подготовка стенда к работе. Возвращает все данные об АИМ 
         
-        if not GetCalibrationInfoAIM(context):
-            RunCalibrationAIM(context)
-            RunTestAIM(context)
+        calibrationResult = GetCalibrationInfoAIM(context)
+
+        if calibrationResult == "NOT_FOUND":
+            print("Калибровка отсутствует")
+            runCalibrationAimResult = RunCalibrationAIM(context)
+            if(runCalibrationAimResult):
+                print("Калибровка прошла успешно")
+                runTestResult = RunTestAIM(context)
+                if(runTestResult):
+                    print("Тестрирование прошло успешно")
+                    continue
+                else:
+                    print("Тестирование прошло неуспешно")
+                    Choice(context)
+            else:
+                print("Калибровка прошла неуспешно")
+                print("1. Сменить модуль")
+                print("2. Выход")
+                choice = input("Выберите действие: ").strip()
+                if(choice == "1"):
+                    continue
+                elif(choice == "2"):
+                    quit("Выход из программы")
+                else:
+                    quit("Ошибка, нужно выбрать пункт 1-2")
+
+        elif calibrationResult == "FAILED":
+            print("Калибровочные коэффициенты неправильные")
+            print("1. Калибровать")
+            print("2. Выход")
+            choice = input("Выберите действие: ").strip()
+
+            if(choice == "1"):
+                runCalibrationAimResult = RunCalibrationAIM(context)
+                if(runCalibrationAimResult):
+                    print("Калибровка прошла успешно")
+                    runTestResult = RunTestAIM(context)
+                    if(runTestResult):
+                        print("Тестрирование прошло успешно")
+                        continue
+                    else:
+                        print("Тестирование прошло неуспешно")
+                        continue
+            elif(choice == "2"):
+                quit("Выход из программы")
+            else:
+                quit("Ошибка, нужно выбрать пункт 1-2")
+
+        elif calibrationResult == "OK":
+            print("Калибровочные коэффициенты исправны")
+            Choice(context)
+
         else:
-            Choise(context)
+            print("Ошибка проверки калибровочных коэффициентов")
+
+
 
         # тут можно сделать инициализацию класса стенда где сразу будет коннект со свсеми приборами и все проверки 
         # для начала нужно проверить все приборы а дальше уже работать так как наверное ошибочно проверять все потом

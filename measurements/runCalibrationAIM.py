@@ -41,11 +41,12 @@ def RunCalibrationAIM(context):
     agilent.ConnectChan(9)  # Работаем с 9 каналом для измерений текущего напряжения напрямую с генератора
     agilent.SetMeasurement("VOLT:DC")
 
-    out1, in1 = MeasurePointAIM(logfile, ctd1620, agilent, generator, moduleChannels, OffsetMax, Delta, "Измерение 1: верхняя точка калибровки")
-    out2, in2 = MeasurePointAIM(logfile, ctd1620, agilent, generator, moduleChannels, OffsetMin, Delta, "Измерение 2: нижняя точка калибровки")
+    mult_high_volt_1, aim_high_volt_1 = MeasurePointAIM(logfile, ctd1620, agilent, generator, moduleChannels, OffsetMax, Delta, "Измерение 1: верхняя точка калибровки")
+    mult_low_volt_2, aim_low_volt_2 = MeasurePointAIM(logfile, ctd1620, agilent, generator, moduleChannels, OffsetMin, Delta, "Измерение 2: нижняя точка калибровки")
 
-    CalcCoefCalibration(logfile, ctd1620, fileName, out1, out2, in1, in2)
+    result = CalcCoefCalibration(logfile, ctd1620, fileName, mult_high_volt_1, mult_low_volt_2, aim_high_volt_1, aim_low_volt_2)
 
+    return result
     #in3 = CheckDcMeasureAIM(logfile, ctd1620, agilent, generator, moduleChannels, Offset, Delta, moduleInput)
     #in4 = CheckAcMeasureAIM(logfile, ctd1620, agilent, generator, moduleChannels, Offset, Delta)
 
