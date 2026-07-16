@@ -2,24 +2,28 @@ from tools.CTD1620 import *
 from scanQR.scan_markers import ScanDataMatrix
 from eeprom.eeprom import *
 from measurements.printInfo import *
-from AIM import *
 
 SlotNumber = 0
 
 def PrepareStand(agilent, generator, first_start, old_moduleName):
 
-    print("Подготовка стенда")
-
     SlotNumber = 0
 
+    print("Чтение данных с наклейки".center(75, '='))
     print("Распознавание наклейки AIM-XXX.\n m - ручной ввод \n ESC - выйти")
     AIM = ScanDataMatrix('AIM')
+    print("".center(75, '='))
+    print()
+    print("Подключение платы AIM-XXX".center(75, '='))
     WaitPressEnter("1. Вставьте плату, подключите AUX\n2. Нажмите Enter")
-    print("===========Подключение к CTD-1620===========")
+    print()
+    #print("Подключение к CTD-1620")
     ctd1620 = CTD1620("10.0.0.2")
     ctd1620.Connect()
-    print("===========Подключено===========")
-    print("==========Чтение информации с платы AIM==========")
+    #print("Подключение к CTD-1620 выполнено успешно")
+    print("".center(75,"="))
+    print()
+    
 
     # Чтение информации из памяти платы
     (

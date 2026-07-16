@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CTD-Device>
+	<VersionInfo version="1"/>
+	<Cfg CfgId="CE013C96-B7ED-4EF5-8689-728A425FB002" DeviceType="5"/>
+	<region_settings base_interval_s="60" Hysteresis_percent="5" DelayUp_ms="1040" DelayDn_ms="5040"/>
+	<VibroChannels>
+		<wave_settings samples="8192" fmax="10000" fmin="0"/>
+		<spectrum_settings lines="3200"/>
+		<VibroChannel number="1" unit="101" input_type="2" hp_filter="0" trn_sens="1" trn_offset="0">
+			<param average_type="0" average_time_s="0" sp_window="2"/>
+			<Absolute_bands>
+				<band number="3" unit="101" low_freq="6.25" high_freq="10000" value_type="1"/>
+			</Absolute_bands>
+			<Average number="1"/>
+			<WaveRMS number="2"/>
+		</VibroChannel>
+		<VibroChannel number="2" unit="101" input_type="2" hp_filter="0" trn_sens="1" trn_offset="0">
+			<param average_type="0" average_time_s="0" sp_window="2"/>
+			<Absolute_bands>
+				<band number="3" unit="101" low_freq="6.25" high_freq="10000" value_type="1"/>
+			</Absolute_bands>
+			<Average number="1"/>
+			<WaveRMS number="2"/>
+		</VibroChannel>
+		<VibroChannel number="3" unit="101" input_type="2" hp_filter="0" trn_sens="1" trn_offset="0">
+			<param average_type="0" average_time_s="0" sp_window="2"/>
+			<Absolute_bands>
+				<band number="3" unit="101" low_freq="6.25" high_freq="10000" value_type="1"/>
+			</Absolute_bands>
+			<Average number="1"/>
+			<WaveRMS number="2"/>
+		</VibroChannel>
+		<VibroChannel number="4" unit="101" input_type="2" hp_filter="0" trn_sens="1" trn_offset="0">
+			<param average_type="0" average_time_s="0" sp_window="2"/>
+			<Absolute_bands>
+				<band number="3" unit="101" low_freq="6.25" high_freq="10000" value_type="1"/>
+			</Absolute_bands>
+			<Average number="1"/>
+			<WaveRMS number="2"/>
+		</VibroChannel>
+		<VibroChannel number="5" unit="101" input_type="2" hp_filter="0" trn_sens="1" trn_offset="0"><param average_type="0" average_time_s="0" sp_window="2"/><Average number="1"/>
+			<WaveRMS number="2"/>
+			<Absolute_bands>
+				<band number="3" unit="101" low_freq="6.25" high_freq="10000" value_type="1"/>
+			</Absolute_bands>
+		</VibroChannel><VibroChannel number="6" unit="101" input_type="2" hp_filter="0" trn_sens="1" trn_offset="0"><param average_type="0" average_time_s="0" sp_window="2"/><Average number="1"/>
+			<WaveRMS number="2"/>
+			<Absolute_bands>
+				<band number="3" unit="101" low_freq="6.25" high_freq="10000" value_type="1"/>
+			</Absolute_bands>
+		</VibroChannel><VibroChannel number="7" unit="101" input_type="2" hp_filter="0" trn_sens="1" trn_offset="0"><param average_type="0" average_time_s="0" sp_window="2"/><Average number="1"/>
+			<WaveRMS number="2"/>
+			<Absolute_bands>
+				<band number="3" unit="101" low_freq="6.25" high_freq="10000" value_type="1"/>
+			</Absolute_bands>
+		</VibroChannel><VibroChannel number="8" unit="101" input_type="2" hp_filter="0" trn_sens="1" trn_offset="0"><param average_type="0" average_time_s="0" sp_window="2"/><Average number="1"/>
+			<WaveRMS number="2"/>
+			<Absolute_bands>
+				<band number="3" unit="101" low_freq="6.25" high_freq="10000" value_type="1"/>
+			</Absolute_bands>
+		</VibroChannel></VibroChannels>
+	<TachoChannels>
+		<TachoChannel number="1" unit="202" inversion="0" divizor="1" reductor_coeff="1">
+			<start_stop_region start_level="1200" stop_level="900"/>
+		</TachoChannel>
+	</TachoChannels>
+	<Monitoring/>
+	<SerialPort Used="0" Number="1" Baudrate="19200" DataBits="4" StopBits="0" Parity="0">
+		<Modbus Type="1" DataValidityTime_s="1">
+			<Outputs/>
+			<Inputs/>
+			<Tables>
+				<Table type="1" count="0" address="1"/>
+				<Table type="2" count="0" address="1"/>
+				<Table type="3" count="0" address="1"/>
+				<Table type="4" count="38" address="1"/>
+			</Tables>
+			<ExchangeCycle>
+				<Cycle Number="1" CycleTime="200" SlaveTimeOut="20" MasterMinDelay="20"/>
+			</ExchangeCycle>
+		</Modbus>
+	</SerialPort>
+	<Diagnoses/>
+	<Test used="0" Relay1="0" Relay2="1" Relay3="2" Relay4="2"/>
+	<Relay>
+		<WarningDelay On_ms="0" Off_ms="0"/>
+		<AlarmDelay On_ms="0" Off_ms="0"/>
+	</Relay>
+	<Events/>
+</CTD-Device>

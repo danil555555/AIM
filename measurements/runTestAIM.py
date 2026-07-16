@@ -1,5 +1,6 @@
-from measure import *
-from calculate import *
+from measurements.measure import *
+from measurements.calculate import *
+from measurements.post_report import *
 
 def RunTestAIM(context):
 
@@ -44,21 +45,23 @@ def RunTestAIM(context):
     ctd1620.Disconnect()
 
    # Отправка лога и двоичного файла на ftp сервер
-    post_report.post_report(fileName+'.log')
-    post_report.post_report(fileName+'.calb')
+    post_report(fileName+'.log')
+    #post_report(fileName+'.calb')
 
    #Учет результатов проверки
     if(checkDcMeasureResult == "OK" and 
        checkAcMeasureResult == "OK" and 
        checkDcMeasureAuxResult == "OK" and 
        checkAcMeasureAuxResult == "OK"):
-        testIsOk == True
+        testIsOk = True
     else:
-        testIsOk == False
+        testIsOk = False
 
     if testIsOk == True:
-        playsound(SaySuccessful)
+        pass
+        #playsound(SaySuccessful)
     else:
-        playsound(SayFailed)
+        pass
+        #playsound(SayFailed)
     
     return testIsOk

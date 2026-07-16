@@ -1,8 +1,8 @@
 import numpy as np
 import time
 import math
-import post_report
-from printInfo import *
+from measurements.post_report import *
+from measurements.printInfo import *
 from playsound import playsound
 
 from eeprom.eeprom import *

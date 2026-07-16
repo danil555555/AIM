@@ -322,6 +322,7 @@ def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):
     """
 
     # 1. Чтение EEPROM
+    print("Чтение информации с платы AIM".center(75,"="))
     moduleInfo = ctd1620.ReadEPROM(0, SlotNumber, 0)
 
     if moduleInfo is None or len(moduleInfo) <= 2:
@@ -366,7 +367,7 @@ def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):
 
     else:
         dnp_change = False
-        print("Данные успешно считаны")
+        print("Данные успешно считаны из EEPROM AIM")
         # 2. Проверка соответствия типа платы
         moduleType = GetModuleType(moduleInfo)
 
@@ -412,6 +413,9 @@ def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):
             else:
                 quit("Ошибка, нужно выбрать пункт 1-3")
 
+        else:
+            print("Данные из EEPROM платы AIM совпали с данным QR")
+
     # 3. Модификация EEPROM-данных
     #if len(sys.argv) <= 1:
         #moduleInfo = moduleInfoModify(moduleInfo, AIM, dnp_change)
@@ -435,12 +439,18 @@ def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):
         #ctd1620.HWRestart()
 
     # 6. Проверка, что серия плат одного типа
+    print("")
+    print("Проверка текущий платы на совпадение типа".center(75,"="))
     if not first_start and (moduleType != old_moduleName):
        quit("Плата не соответствует первой плате серии\n" + "Первая плата: " + str(old_moduleName)
             + "\nТекущая плата: "
             + str(moduleType)
         )
     else:
+       if first_start:
+           print("Первый запуск")
+       else:
+           print("Плата соответствует серии первой платы")
        old_moduleName = moduleType
        old_DNP = moduleDNP
        if first_start:
@@ -460,11 +470,14 @@ def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):
           else:
              print('Аппаратная конфигурация зафиксирована')
              first_start = False
-             print("")
+             
+    print("".center(75,"="))
+    print("")
+    print("")
 
     fileName = GetFileName(moduleName)
     logfile = open(fileName + '.log', 'w')
-    Print(logfile, "Begin".center(40, '-'))
+    Print(logfile, "Характеристики AIM-XXX".center(75, '='))
     Print(logfile, "Module  : " + moduleName[0:7])
     Print(logfile, "Number  : " + moduleName[8:])
     Print(logfile, "Channels: " + str(moduleChannels))
@@ -472,7 +485,8 @@ def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):
     Print(logfile, "Voltage : " + "{0:.1f}".format(moduleUMin) + " ... " + "{0:.1f}".format(moduleUMax))
     Print(logfile, "DNP     : " + moduleDNP)
     Print(logfile, "Date    : " + moduleDate)
-    Print(logfile, "".center(40, '-'))
+    Print(logfile, "".center(75, '-'))
+    Print(logfile,"")
     Print(logfile,"")
 
     return(

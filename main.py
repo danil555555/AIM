@@ -1,44 +1,121 @@
-from stand import PrepareStand
-
-from measurements.runCoefAIM import GetCalibrationInfoAIM
-from measurements.runTestAIM import RunTestAIM
-from measurements.runCalibrationAIM import RunCalibrationAIM
-
-from tools.Agilent34401A import *
-from tools.TGA1240 import *
+import sys
 
 from colorama import init
 
+from stand import PrepareStand
+from measurements.runCoefAIM import GetCalibrationInfoAIM
+from measurements.runTestAIM import RunTestAIM
+from measurements.runCalibrationAIM import RunCalibrationAIM
+from tools.Agilent34401A import Agilent34401A
+from tools.TGA1240 import TGA1240
+
+
 init()
 
-def print_menu():
 
+def printMainMenu() -> None:
     print("")
-    print("=============== Тест AIM ===============")
+    print("")
+    print("Тест AIM".center(75,"="))
     print("1. Тест платы")
     print("2. Калибровка платы")
-    print("3. Выход")
-    print("========================================")
+    print("3. Сменить модуль")
+    print("4. Выход")
+    print("="*75)
+    print("")
     print("")
 
-def Choice(context):
-    print_menu()
 
-    choice = input("Введите цифру действия: ").strip()
+def moduleMenu(context: dict) -> str:
+    """
+    Меню работы с установленным модулем.
 
-    if choice == "1":
-        RunTestAIM(context)
+    Возвращает:
+        CHANGE_MODULE — сменить модуль;
+        EXIT          — завершить программу.
+    """
 
-    elif choice == "2":
-        RunCalibrationAIM(context)
+    while True:
+        printMainMenu()
 
-    elif choice == "3":
-        print("Завершение работы")
+        choice = input("Введите номер действия: ").strip()
+
+        if choice == "1":
+            testResult = RunTestAIM(context)
+
+            if testResult:
+                print("Тестирование прошло успешно")
+            else:
+                print("Тестирование прошло неуспешно")
+
+        elif choice == "2":
+            calibrateResult = RunCalibrationAIM(context)
+
+            if calibrateResult:
+                print("Калибровка прошла успешно")
+            else:
+                print("Калибровка прошла неуспешно")
+
+        elif choice == "3":
+            return "CHANGE_MODULE"
+
+        elif choice == "4":
+            return "EXIT"
+
+        else:
+            print("Ошибка: необходимо выбрать пункт от 1 до 4")
+
+
+def processModule(context: dict) -> str:
+    """
+    Проверяет состояние калибровки и определяет дальнейшую работу.
+
+    Возвращает:
+        CHANGE_MODULE — перейти к следующему модулю;
+        EXIT          — завершить программу.
+    """
+
+    calibrationResult = GetCalibrationInfoAIM(context)
+
+    if calibrationResult == "NOT_FOUND":
+        print("Калибровка отсутствует")
+        print("Будет выполнена автоматическая калибровка и тестирование")
+
+
+        calibrateResult = RunCalibrationAIM(context)
+
+        if calibrateResult:
+            print("Калибровка прошла успешно")
+
+            testResult = RunTestAIM(context)
+
+            if testResult:
+                print("Тестирование прошло успешно")
+            else:
+                print("Тестирование закончилось с ошибкой")
+        else:
+            print("Калибровка закончилась с ошибкой")
+
+    elif calibrationResult == "FAILED":
+        print("Калибровочные коэффициенты неправильные")
+
+
+    elif calibrationResult == "OK":
+        print("Калибровочные коэффициенты исправны")
 
     else:
-        print("Ошибка, нужно выбрать пункт 1-3")
+        print(
+            "Ошибка проверки калибровочных коэффициентов: "
+            f"{calibrationResult!r}"
+        )
 
-def main():
+        return "CHANGE_MODULE"
+
+    return moduleMenu(context)
+
+
+
+def main() -> None:
 
     agilent = Agilent34401A("COM6")
     agilent.SetMeasurement("VOLT:DC")
@@ -49,71 +126,35 @@ def main():
     first_start = True
     old_moduleName = ""
 
-    while True:
+    try:
+        while True:
+            context = PrepareStand(agilent, generator, first_start, old_moduleName)
 
-        context = PrepareStand(agilent, generator, first_start, old_moduleName) # подготовка стенда к работе. Возвращает все данные об АИМ 
-        
-        calibrationResult = GetCalibrationInfoAIM(context)
+            first_start = False
 
-        if calibrationResult == "NOT_FOUND":
-            print("Калибровка отсутствует")
-            runCalibrationAimResult = RunCalibrationAIM(context)
-            if(runCalibrationAimResult):
-                print("Калибровка прошла успешно")
-                runTestResult = RunTestAIM(context)
-                if(runTestResult):
-                    print("Тестрирование прошло успешно")
-                    continue
-                else:
-                    print("Тестирование прошло неуспешно")
-                    Choice(context)
-            else:
-                print("Калибровка прошла неуспешно")
-                print("1. Сменить модуль")
-                print("2. Выход")
-                choice = input("Выберите действие: ").strip()
-                if(choice == "1"):
-                    continue
-                elif(choice == "2"):
-                    quit("Выход из программы")
-                else:
-                    quit("Ошибка, нужно выбрать пункт 1-2")
+            old_moduleName = context["moduleType"]
 
-        elif calibrationResult == "FAILED":
-            print("Калибровочные коэффициенты неправильные")
-            print("1. Калибровать")
-            print("2. Выход")
-            choice = input("Выберите действие: ").strip()
+            action = processModule(context)
 
-            if(choice == "1"):
-                runCalibrationAimResult = RunCalibrationAIM(context)
-                if(runCalibrationAimResult):
-                    print("Калибровка прошла успешно")
-                    runTestResult = RunTestAIM(context)
-                    if(runTestResult):
-                        print("Тестрирование прошло успешно")
-                        continue
-                    else:
-                        print("Тестирование прошло неуспешно")
-                        continue
-            elif(choice == "2"):
-                quit("Выход из программы")
-            else:
-                quit("Ошибка, нужно выбрать пункт 1-2")
+            if action == "CHANGE_MODULE":
+                print("Подготовьте следующий модуль")
+                continue
 
-        elif calibrationResult == "OK":
-            print("Калибровочные коэффициенты исправны")
-            Choice(context)
+            if action == "EXIT":
+                print("Завершение работы")
+                return
 
-        else:
-            print("Ошибка проверки калибровочных коэффициентов")
+    except KeyboardInterrupt:
+        print("\nРабота остановлена пользователем")
+
+    except Exception as error:
+        print(f"\nКритическая ошибка программы: {error}")
+        raise
+
+    finally:
+
+        print("Завершение работы со стендом")
 
 
-
-        # тут можно сделать инициализацию класса стенда где сразу будет коннект со свсеми приборами и все проверки 
-        # для начала нужно проверить все приборы а дальше уже работать так как наверное ошибочно проверять все потом
-        # Стандартная инициализация - если нет коэф, сразу запустить RunCalibrationAIM, 
-        # 
-        # если есть коэф то 
 if __name__ == "__main__":
     main()

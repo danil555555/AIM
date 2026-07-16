@@ -1,7 +1,7 @@
-from calculate import CalcSafeOffsetsGen
-from measure import *
+from measurements.calculate import CalcSafeOffsetsGen
+from measurements.measure import *
 
-def RunCalibrationAIM(context):
+def RunCalibrationAIM(context: object) -> bool:
 
     logfile = context["logfile"]
     ctd1620 = context["ctd1620"]

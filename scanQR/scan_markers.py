@@ -51,10 +51,12 @@ def ScanDataMatrix(name):
             if barCode.find(name) >= 0:
                 cap.release()
                 cv2.destroyAllWindows()
-                print(barCode)
+                #print(barCode)
                 lines = barCode.split(',')
-                playsound(IsScanned)
+                #playsound(IsScanned)
+                print()
                 return { "Name": lines[0], "DNP": lines[1], "SN": lines[2] }
+
                
         # Display the resulting frame
         cv2.imshow(name, frame)
