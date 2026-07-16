@@ -261,6 +261,7 @@ def GetCalibParam(ctd1620, SlotNumber, moduleName):
 
     #if oldGain is not None and oldOffset is not None:
     if oldGain is not None:
+        print("="*40)
         print("Калибровочные коэффициенты из EEPROM")
         print("Дата калибровки:", calbDate)
 
@@ -299,15 +300,21 @@ def GetCalibParam(ctd1620, SlotNumber, moduleName):
             print("-" * len(header))
             
         if all(value == "OK" for value in result):
-            print("Результат проверки калибровочных коэффициентов: SUCCESSFUL")
+            print("Результат проверки калибровочных коэффициентов: УСПЕШНО")
+            print("="*40)
             return "OK"
         else:
-            print("Результат проверки калибровочных коэффициентов: FAILED")
+            print("Результат проверки калибровочных коэффициентов: ОШИБКА")
+            print("="*40)
             return "FAILED"
     
     else:
         print("Калибровочные коэффициенты не найдены")
+        print("="*40)
         return "NOT_FOUND"
+    
+    
+
 
 def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):  
     #есть вопросы
@@ -486,7 +493,7 @@ def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):
     Print(logfile, "Voltage : " + "{0:.1f}".format(moduleUMin) + " ... " + "{0:.1f}".format(moduleUMax))
     Print(logfile, "DNP     : " + moduleDNP)
     Print(logfile, "Date    : " + moduleDate)
-    Print(logfile, "".center(40, '-'))
+    Print(logfile, "".center(40, '='))
     Print(logfile,"")
     Print(logfile,"")
 
