@@ -16,7 +16,7 @@ def ManualInput(name):
     if len(DNP)==0:
          DNP = name['DNP']
     SN   = input('ВВедите SN: ')
-    print(NAME+','+DNP+','+SN)
+    #print(NAME+','+DNP+','+SN)
     return { "Name": NAME, "DNP": DNP, "SN": SN }
 
 
