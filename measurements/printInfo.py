@@ -1,14 +1,15 @@
 import numpy as np
 
+CONSOLE_WIDTH = 40
 #------------------------------------------------------------------------------
-def WaitPressEnter(text="РќР°Р¶РјРёС‚Рµ Р»СЋР±СѓСЋ РєР»Р°РІРёС€Сѓ..."):
+def WaitPressEnter(text="Нажмите любую клавишу..."):
     input(text)
 
 #------------------------------------------------------------------------------
 def Print(out, data, color = None):
-    RED = "\033[91m" # РєРѕРґ РґР»СЏ РІС‹РІРѕРґР° РєСЂР°СЃРЅС‹Рј С†РІРµС‚РѕРј
-    GREEN = "\033[92m" # РєРѕРґ РґР»СЏ РІС‹РІРѕРґР° Р·РµР»РµРЅС‹Рј С†РІРµС‚РѕРј
-    RESET = "\033[0m" # РєРѕРґ РґР»СЏ СЃР±СЂРѕСЃР° С†РІРµС‚Р° РєРѕРЅСЃРѕР»Рё РѕР±СЂР°С‚РЅРѕ РІ С‡РµСЂРЅС‹Р№
+    RED = "\033[91m" # код для вывода красным цветом
+    GREEN = "\033[92m" # код для вывода зеленым цветом
+    RESET = "\033[0m" # код для сброса цвета консоли обратно в черный
 
     txt = str(data)
     if(color == "red"):
@@ -19,17 +20,35 @@ def Print(out, data, color = None):
         print(txt)
     out.write(txt + "\n")
 
+def PrintBlockStart(title, width=CONSOLE_WIDTH):
+    print()
+    print(title.center(width, "="))
+
+
+def PrintBlockEnd(width=CONSOLE_WIDTH):
+    print("=" * width)
+    print()
+
+
+def LogBlockStart(logfile, title, width=CONSOLE_WIDTH):
+    Print(logfile, "")
+    Print(logfile, title.center(width, "="))
+
+
+def LogBlockEnd(logfile, width=CONSOLE_WIDTH):
+    Print(logfile, "=" * width)
+    Print(logfile, "")
 
 
 #------------------------------------------------------------------------------
 def PercentError(measured, reference):
    """
-   Р Р°СЃС‡РµС‚ РѕС€РёР±РєРё РІ РїСЂРѕС†РµРЅС‚Р°С… РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РѕРґРЅРѕРіРѕ СЌС‚Р°Р»РѕРЅРЅРѕРіРѕ Р·РЅР°С‡РµРЅРёСЏ.
+   Расчет ошибки в процентах относительно одного эталонного значения.
 
-   measured  - РјР°СЃСЃРёРІ РёР·РјРµСЂРµРЅРЅС‹С… Р·РЅР°С‡РµРЅРёР№, РЅР°РїСЂРёРјРµСЂ Р·РЅР°С‡РµРЅРёСЏ РїР»Р°С‚С‹ CTD1620
-   reference - СЌС‚Р°Р»РѕРЅРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ, РЅР°РїСЂРёРјРµСЂ Р·РЅР°С‡РµРЅРёРµ РјСѓР»СЊС‚РёРјРµС‚СЂР° Agilent
+   measured  - массив измеренных значений, например значения платы CTD1620
+   reference - эталонное значение, например значение мультиметра Agilent
 
-   Р¤РѕСЂРјСѓР»Р°:
+   Формула:
    percent = |measured - reference| / |reference| * 100
    """
    measured = np.array(measured, dtype=float)
@@ -42,10 +61,10 @@ def PercentError(measured, reference):
 #------------------------------------------------------------------------------
 def PercentErrorArray(measured, reference):
    """
-   Р Р°СЃС‡РµС‚ РѕС€РёР±РєРё РІ РїСЂРѕС†РµРЅС‚Р°С… РґР»СЏ РґРІСѓС… РјР°СЃСЃРёРІРѕРІ РѕРґРёРЅР°РєРѕРІРѕР№ РґР»РёРЅС‹.
+   Расчет ошибки в процентах для двух массивов одинаковой длины.
 
-   measured  - РјР°СЃСЃРёРІ РёР·РјРµСЂРµРЅРЅС‹С… Р·РЅР°С‡РµРЅРёР№, РЅР°РїСЂРёРјРµСЂ AUX-РІС‹С…РѕРґС‹
-   reference - РјР°СЃСЃРёРІ СЌС‚Р°Р»РѕРЅРЅС‹С… Р·РЅР°С‡РµРЅРёР№, РЅР°РїСЂРёРјРµСЂ Р·РЅР°С‡РµРЅРёСЏ РїР»Р°С‚С‹ CTD1620
+   measured  - массив измеренных значений, например AUX-выходы
+   reference - массив эталонных значений, например значения платы CTD1620
    """
    measured = np.array(measured, dtype=float)
    reference = np.array(reference, dtype=float)
@@ -66,11 +85,11 @@ def PercentErrorArray(measured, reference):
 #------------------------------------------------------------------------------
 def PrintMeasureTable(out, title, reference, measured, threshold_mv):
    """
-   РџРµС‡Р°С‚СЊ РїРѕРЅСЏС‚РЅРѕР№ С‚Р°Р±Р»РёС†С‹ РґР»СЏ РїСЂРѕРІРµСЂРєРё РІС…РѕРґРЅС‹С… РёР·РјРµСЂРµРЅРёР№.
+   Печать понятной таблицы для проверки входных измерений.
 
-   reference    - СЌС‚Р°Р»РѕРЅ РјСѓР»СЊС‚РёРјРµС‚СЂР°, РѕРґРЅРѕ С‡РёСЃР»Рѕ, РјР’
-   measured     - РјР°СЃСЃРёРІ Р·РЅР°С‡РµРЅРёР№ РїР»Р°С‚С‹, РјР’
-   threshold_mv - РґРѕРїСѓСЃС‚РёРјР°СЏ Р°Р±СЃРѕР»СЋС‚РЅР°СЏ РѕС€РёР±РєР°, РјР’
+   reference    - эталон мультиметра, одно число, мВ
+   measured     - массив значений платы, мВ
+   threshold_mv - допустимая абсолютная ошибка, мВ
    """
 
    measured = np.array(measured, dtype=float)
@@ -78,10 +97,10 @@ def PrintMeasureTable(out, title, reference, measured, threshold_mv):
    percent = PercentError(measured, reference)
 
    Print(out, title.center(65, '-'))
-   Print(out, "РќР°РїСЂСЏР¶РµРЅРёРµ РјСѓР»СЊС‚РёРјРµС‚СЂР°: " + "{0:.3f}".format(reference) + " mV")
-   Print(out, "РџРѕРіСЂРµС€РЅРѕСЃС‚СЊ: +/-" + "{0:.3f}".format(threshold_mv) + " mV")
+   Print(out, "Напряжение мультиметра: " + "{0:.3f}".format(reference) + " mV")
+   Print(out, "Погрешность: +/-" + "{0:.3f}".format(threshold_mv) + " mV")
    Print(out, "")
-   Print(out, "РљР°РЅР°Р» | РќР°РїСЂСЏР¶РµРЅРёРµ AIM , mV | РћС€РёР±РєР°, mV | РћС€РёР±РєР°, %")
+   Print(out, "Канал | Напряжение AIM , mV | Ошибка, mV | Ошибка, %")
    Print(out, "---------------------------------------------")
 
    for i in range(0, len(measured)):
@@ -112,11 +131,11 @@ def PrintMeasureTable(out, title, reference, measured, threshold_mv):
 #------------------------------------------------------------------------------
 def PrintArrayCompareTable(out, title, reference, measured, result, threshold = 0):
    """
-   РџРµС‡Р°С‚СЊ С‚Р°Р±Р»РёС†С‹ РґР»СЏ СЃСЂР°РІРЅРµРЅРёСЏ РґРІСѓС… РјР°СЃСЃРёРІРѕРІ.
+   Печать таблицы для сравнения двух массивов.
 
-   reference    - РјР°СЃСЃРёРІ СЌС‚Р°Р»РѕРЅРЅС‹С… Р·РЅР°С‡РµРЅРёР№, РЅР°РїСЂРёРјРµСЂ РІС…РѕРґРЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ РїР»Р°С‚С‹, РјР’
-   measured     - РјР°СЃСЃРёРІ РїСЂРѕРІРµСЂСЏРµРјС‹С… Р·РЅР°С‡РµРЅРёР№, РЅР°РїСЂРёРјРµСЂ AUX-РІС‹С…РѕРґС‹, РјР’
-   threshold_mv - РґРѕРїСѓСЃС‚РёРјР°СЏ Р°Р±СЃРѕР»СЋС‚РЅР°СЏ РѕС€РёР±РєР°, РјР’
+   reference    - массив эталонных значений, например входные значения платы, мВ
+   measured     - массив проверяемых значений, например AUX-выходы, мВ
+   threshold_mv - допустимая абсолютная ошибка, мВ
    """
 
    measured = np.array(measured, dtype=float)
@@ -129,19 +148,19 @@ def PrintArrayCompareTable(out, title, reference, measured, result, threshold = 
    delta = abs(measured - reference)
    percent = PercentErrorArray(measured, reference)
 
-   header = (f"{'РљР°РЅР°Р»':<6} | "
-             f"{'РњСѓР»СЊС‚РёРјРµС‚СЂ, РјР’':>18} | "
-             f"{'AIM, РјР’':>18} | "
-             f"{'РћС€РёР±РєР°, РјР’':>12} | "
-             f"{'РџРѕРіСЂРµС€РЅРѕСЃС‚СЊ РёР·РјРµСЂРµРЅРёСЏ, %':>20} | "
-             f"{'Р РµР·СѓР»СЊС‚Р°С‚':>10} | "
+   header = (f"{'Канал':<6} | "
+             f"{'Мультиметр, мВ':>18} | "
+             f"{'AIM, мВ':>18} | "
+             f"{'Ошибка, мВ':>12} | "
+             f"{'Погрешность измерения, %':>20} | "
+             f"{'Результат':>10} | "
              )
 
    Print(out, title.center(75, '-'))
-   Print(out, "РџРѕРіСЂРµС€РЅРѕСЃС‚СЊ: +/-" + "{0:.3f}".format(threshold) + " РјР’")
+   Print(out, "Погрешность: +/-" + "{0:.3f}".format(threshold) + " мВ")
    Print(out, "")
    Print(out, header)
-   #Print(out, "РљР°РЅР°Р» | РњСѓР»СЊС‚РёРјРµС‚СЂ, РјР’ | AIM, РјР’ | РћС‚РєР»РѕРЅРµРЅРёРµ, РјР’ | РџРѕРіСЂРµС€РЅРѕСЃС‚СЊ, % | Р РµР·СѓР»СЊС‚Р°С‚ ")
+   #Print(out, "Канал | Мультиметр, мВ | AIM, мВ | Отклонение, мВ | Погрешность, % | Результат ")
    Print(out, "-" * len(header))
 
    for i in range(0, len(measured)):
@@ -168,7 +187,7 @@ def PrintArrayCompareTable(out, title, reference, measured, result, threshold = 
                f"{'':>10}"
                )
    Print(out, max_line)
-   Print(out, "Р РµР·СѓР»СЊС‚Р°С‚:")
+   Print(out, "Результат:")
    if all(r == "OK" for r in result):
       Print(out, "SUCCESSFUL", color = "green")
       Print(out, "")
@@ -181,17 +200,16 @@ def PrintArrayCompareTable(out, title, reference, measured, result, threshold = 
 
 def PrintChannelMeasureTable(out, title, measured, error, result):
    """
-   measured - РјР°СЃСЃРёРІ РёР·РјРµСЂРµРЅРЅС‹С… Р·РЅР°С‡РµРЅРёР№, РјР’
+   measured - массив измеренных значений, мВ
    """
 
    measured = np.array(measured, dtype=float)
 
    Print(out, title.center(75, '-'))
    header = (
-      f"{'РљР°РЅР°Р»':<6} | "
-      f"{'РљРѕСЌС„РёС†РёРµРЅС‚':>14} | "
-      f"{'РћС€РёР±РєР°':>14} | "
-      f"{'Р РµР·СѓР»СЊС‚Р°С‚':>10}"
+      f"{'Канал':<6} | "
+      f"{'Коэфициент':>14} | "
+      f"{'Результат':>10}"
       )
    Print(out, header)
    Print(out, "-" * len(header))
@@ -200,7 +218,6 @@ def PrintChannelMeasureTable(out, title, measured, error, result):
       line = (
          f"{'CH' + str(i + 1).zfill(2):<6} | "
          f"{measured[i]:>14.3f} | "
-         f"{error[i]:>14.3f} | "
          f"{result[i]:>10}"
       )
       if(result[i] == "OK"):
@@ -211,12 +228,11 @@ def PrintChannelMeasureTable(out, title, measured, error, result):
    Print(out, "-" * len(line))
    max_line = (f"{'MAX':<6} | "
                f"{'':>14} | "
-               f"{max(error):>14.3f} | "
-               f"{'':>10}"
+               f"{max(error):>14.3f}"
                )
    Print(out, max_line)
    Print(out, "-" * len(header))
-   Print(out, "Р РµР·СѓР»СЊС‚Р°С‚:")
+   Print(out, "Результат:")
    if all(r == "OK" for r in result):
       Print(out, "SUCCESSFUL", color = "green")
       Print(out, "")

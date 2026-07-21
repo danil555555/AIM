@@ -2,11 +2,11 @@ from gtts import gTTS
 import os
 
 language = 'ru'
-text = "РўРµСЃС‚РёСЂРѕРІР°РЅРёРµ РїР»Р°С‚С‹ СѓСЃРїРµС€РЅРѕ Р·Р°РІРµСЂС€РµРЅРѕ"
+text = "Тестирование платы успешно завершено"
 speech = gTTS(text = text, lang = language, slow = False)
 speech.save("TestIsSuccessful.mp3")
 
-text = "РўРµСЃС‚РёСЂРѕРІР°РЅРёРµ РїР»Р°С‚С‹ Р·Р°РІРµСЂС€РµРЅРѕ СЃ РѕС€РёР±РєРѕР№"
+text = "Тестирование платы завершено с ошибкой"
 speech = gTTS(text = text, lang = language, slow = False)
 speech.save("TestIsFailed.mp3")
 

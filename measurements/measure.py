@@ -12,9 +12,9 @@ SayFailed = '../Resource/TestIsFailed.mp3'
 SaySuccessful = '../Resource/TestIsSuccessful.mp3'
 
 def Measure(ctd1620, agilent, channels, average=1, delta=0.1, param=0):
-    #ctd1620-РґР»СЏ С‡С‚РµРЅРёСЏ V,agilent - РґР»СЏ С‡С‚РµРЅРёСЏ V,channels - РґР»СЏ СЃРїРёСЃРєР° ctd1620
+    #ctd1620-для чтения V,agilent - для чтения V,channels - для списка ctd1620
     avrVoltage = 0.0
-    avrParams = np.zeros(channels) #РЅР°РїСЂСЏР¶РµРЅРёРµ РЅР° pcm1620 
+    avrParams = np.zeros(channels) #напряжение на pcm1620 
     tmpVoltageOld = avrVoltage
     tmpParamsOld = avrParams
 
@@ -22,14 +22,14 @@ def Measure(ctd1620, agilent, channels, average=1, delta=0.1, param=0):
 
     if (average == 1):
         BP = ctd1620.GetBlockParameters()
-        avrVoltage = 1000.0*float(agilent.Read()) #С‡С‚РµРЅРёРµ РїРѕРєР°Р·Р°РЅРёР№ РјСѓР»СЊС‚РёРјРµС‚СЂР°
+        avrVoltage = 1000.0*float(agilent.Read()) #чтение показаний мультиметра
         avrParams = np.array(BP.VibroParameters(param=param)[0:channels])
-        #avrParams - РїРѕР»СѓС‡Р°РµРј РёР· С†РёС„СЂРѕРІРѕР№ РїР»Р°С‚С‹ pcm1620
+        #avrParams - получаем из цифровой платы pcm1620
         return (avrVoltage, avrParams) #(out, in)
 
     i = 0
     ret = 1
-    while True: #С†РёРєР» РёР·РјРµСЂРµРЅРёР№
+    while True: #цикл измерений
         i += 1
         BP = ctd1620.GetBlockParameters()
         avrVoltage += 1000.0*float(agilent.Read())
@@ -38,40 +38,40 @@ def Measure(ctd1620, agilent, channels, average=1, delta=0.1, param=0):
         koef = 1.0 / float(i)
         tmpVoltage = koef * avrVoltage
         tmpParams  = koef * avrParams
-        dVoltage = abs(tmpVoltage - tmpVoltageOld)  #РёР·РјРµРЅРµРЅРёРµ out
-        dParams  = abs(tmpParams - tmpParamsOld) #РёР·РјРµРЅРµРЅРёРµ in
-        ret = max(dVoltage, max(dParams)) #РјР°РєСЃРёРјР°Р»СЊРЅРѕРµ РёР·РјРµРЅРµРЅРёРµ in РёР»Рё out
+        dVoltage = abs(tmpVoltage - tmpVoltageOld)  #изменение out
+        dParams  = abs(tmpParams - tmpParamsOld) #изменение in
+        ret = max(dVoltage, max(dParams)) #максимальное изменение in или out
         #txt = "Average " + str(i) + " (" + "{0:.3f}".format(ret) + ")"
         #print(txt.ljust(24,' '), end='\r')
-        if (ret < delta) and (i >= average): #СѓСЃР»РѕРІРёРµ РІС‹С…РѕРґР° РёР· С†РёРєР»Р°
+        if (ret < delta) and (i >= average): #условие выхода из цикла
             print('')
-            # Р”РѕР±Р°РІРёС‚СЊ Р»РѕРіРёСЂРѕРІР°РЅРёРµ РїРѕРіСЂРµС€РЅРѕСЃС‚Рё 
+            # Добавить логирование погрешности 
             break
         tmpVoltageOld = tmpVoltage
         tmpParamsOld  = tmpParams.copy()
-        # СЂРµР°Р»РёР·РѕРІР°С‚СЊ РІС‹С…РѕРґ РёР· С†РёРєР»Р° 
+        # реализовать выход из цикла 
 
     return (tmpVoltage, tmpParams) #(out, in)
-    #out - РјСѓР»СЊС‚РёРјРµС‚СЂ (float), in - Р±Р»РѕРє СЃ РїР»Р°С‚Р°РјРё ctd1620 (array)
+    #out - мультиметр (float), in - блок с платами ctd1620 (array)
 
 
 
 def WaitStable(ctd1620, agilent, channels, delta=0.2, param=0):
-    #С„СѓРЅРєС†РёСЏ РѕР¶РёРґР°РЅРёСЏ, РїРѕРєР° РёР·РјРµСЂРµРЅРёСЏ РЅРµ СЃС‚Р°РЅСѓС‚ СЃС‚Р°Р±РёР»СЊРЅС‹РјРё
-    out1, in1 = Measure(ctd1620, agilent, channels) #РїРµСЂРІРѕРµ РёР·РјРµСЂРµРЅРёРµ
+    #функция ожидания, пока измерения не станут стабильными
+    out1, in1 = Measure(ctd1620, agilent, channels) #первое измерение
     ret = 1
     i = 0
     while True:
-        i += 1 # out2,in2 - РќРѕРІС‹Рµ РёР·РјРµСЂРµРЅРёСЏ, СѓР¶Рµ СЃ РїР°СЂР°РјРµС‚СЂРѕРј
+        i += 1 # out2,in2 - Новые измерения, уже с параметром
         out2, in2 = Measure(ctd1620, agilent, channels, param=param)
         #out1 = 0.9*out1 + 0.1*out2
         #in1  = 0.9*in1  + 0.1*in2
         dout = abs(out2 - out1) 
         din  = abs(in2 - in1)
         ret = max(dout, max(din))
-        #print("РЎС‚Р°Р±РёР»РёР·Р°С†РёСЏ РёР·РјРµСЂРµРЅРёР№ " + str(i) + "... (" + "{0:.3f}".format(ret) + ")", end='\r')
-        #Print(logfile, "РЎС‚Р°Р±РёР»РёР·Р°С†РёСЏ РёР·РјРµСЂРµРЅРёР№")
-        if ret < delta: #РјР°РєСЃРёРјР°Р»СЊРЅР°СЏ РїРѕРіСЂРµС€РЅРѕСЃС‚СЊ РІ РїСЂРµРґРµР»Р°С… РґРѕРїСѓСЃРєР°?
+        #print("Стабилизация измерений " + str(i) + "... (" + "{0:.3f}".format(ret) + ")", end='\r')
+        #Print(logfile, "Стабилизация измерений")
+        if ret < delta: #максимальная погрешность в пределах допуска?
             print('')
             return
         out1 = out2
@@ -79,26 +79,26 @@ def WaitStable(ctd1620, agilent, channels, delta=0.2, param=0):
 
 
 
-def linescan(out,ag,n,lowthr,highthr,offset=0): # РЎРєР°РЅРёСЂРѕРІР°РЅРёРµ РЅР°РїСЂСЏР¶РµРЅРёР№ Р»РёРЅРёР№
-   #ag-РјСѓР»СЊС‚РёРјРµС‚СЂ, n-СЌС‚Рѕ РєРѕР»-РІРѕ РєР°РЅР°Р»РѕРІ,
-   Print(out, "РџСЂРѕРІРµСЂРєР° РЅР°РїСЂСЏР¶РµРЅРёР№ РІС‹С…РѕРґРЅС‹С… Р»РёРЅРёР№ РїРёС‚Р°РЅРёСЏ".center(40, '-'))
+def linescan(out,ag,n,lowthr,highthr,offset=0): # Сканирование напряжений линий
+   #ag-мультиметр, n-это кол-во каналов,
+   Print(out, "Проверка напряжений выходных линий питания".center(40, '-'))
    Print(out, "")
-   Print(out,f"Р”РѕРїСѓСЃС‚РёРјС‹Р№ РґРёР°РїР°Р·РѕРЅ: {lowthr:.3f} ... {highthr:.3f}")
+   Print(out,f"Допустимый диапазон: {lowthr:.3f} ... {highthr:.3f}")
    Print(out, "")
    ag.SetMeasurement('VOLT:DC')
-   vals = np.zeros(n) #zeros СЃРѕР·РґР°РµС‚ РјР°СЃСЃРёРІ РёР· n СЌР»РµРјРµРЅС‚РѕРІ, Р·Р°РїРѕР»РЅРµРЅРЅС‹Р№ РЅСѓР»СЏРјРё
+   vals = np.zeros(n) #zeros создает массив из n элементов, заполненный нулями
    res = []
    list_results = []
    np.set_printoptions(formatter={'float': '{: 0.3f}'.format})
    for x in range(0,n):
-     ag.ConnectChan(offset+x+1) #РЅР°СЃС‚СЂРѕР№РєР° РјСѓР»СЊС‚РёРјРµС‚СЂР° РЅР° РєР°РЅР°Р»
-     ag.SetContinue(False) #РѕС‚РєР»СЋС‡РµРЅРёРµ РїСЂРѕРґРѕР»Р¶РµРЅРёСЏ (?)
+     ag.ConnectChan(offset+x+1) #настройка мультиметра на канал
+     ag.SetContinue(False) #отключение продолжения (?)
      time.sleep(2)
-     val=ag.Read()#С‡С‚РµРЅРёРµ РїРѕРєР°Р·Р°РЅРёР№ РјСѓР»СЊС‚РёРјРµС‚СЂР°
-     #Р¦РёРєР» РїСЂРѕС…РѕРґРёС‚ РїРѕ РІСЃРµРј РєР°РЅР°Р»Р°Рј: РµСЃР»Рё РЅР°РїСЂСЏР¶РµРЅРёРµ РЅРµ РІС…РѕРґРёС‚ РІ Р·Р°РґР°РЅРЅС‹Р№ РґРёР°РїР°Р·РѕРЅ, С‚Рѕ
-     #РЅРѕРјРµСЂ РЅРµРёСЃРїСЂР°РІРЅРѕРіРѕ РєР°РЅР°Р»Р° Р·Р°РЅРѕСЃРёС‚СЃСЏ РІ СЃРїРёСЃРѕРє res; РµСЃР»Рё РІСЃРµ РєР°РЅР°Р»С‹ РёСЃРїСЂР°РІРЅС‹ - СЃРїРёСЃРѕРє РїСѓСЃС‚
-     while isinstance(val,float) and not math.isfinite(val): # РџРѕРєР° inf РїРѕРІС‚РѕСЂСЏС‚СЊ РїРѕРїС‹С‚РєРё С‡С‚РµРЅРёСЏ
-        #РїРѕРІС‚РѕСЂСЏС‚СЊ РїРѕРєР° (СЃ РїР»Р°РІР°СЋС‰РµР№ С‚РѕРєРѕР№) Рё (Р±РµСЃРєРѕРЅРµС‡РЅРѕРµ) 
+     val=ag.Read()#чтение показаний мультиметра
+     #Цикл проходит по всем каналам: если напряжение не входит в заданный диапазон, то
+     #номер неисправного канала заносится в список res; если все каналы исправны - список пуст
+     while isinstance(val,float) and not math.isfinite(val): # Пока inf повторять попытки чтения
+        #повторять пока (с плавающей токой) и (бесконечное) 
         val = ag.Read()
      val = float(val)
      vals[x] = val
@@ -106,10 +106,10 @@ def linescan(out,ag,n,lowthr,highthr,offset=0): # РЎРєР°РЅРёСЂРѕРІР°РЅРёРµ РЅР°Р
            pass
            list_results.append("OK")
      else:
-           res.append(x+1) #append - РґРѕР±Р°РІР»РµРЅРёРµ СЌР»РµРјРµРЅС‚Р° РІ РєРѕРЅРµС† СЃРїРёСЃРєР°
+           res.append(x+1) #append - добавление элемента в конец списка
            list_results.append("FAILED")
-   Print(out, "РўР°Р±Р»РёС†Р° РЅР°РїСЂСЏР¶РµРЅРёР№".center(75, '-'))
-   Print(out, "РљР°РЅР°Р» | РќР°РїСЂСЏР¶РµРЅРёРµ, Р’ | Р РµР·СѓР»СЊС‚Р°С‚")
+   Print(out, "Таблица напряжений".center(75, '-'))
+   Print(out, "Канал | Напряжение, В | Результат")
    Print(out, "---------------------------------")
    for i in range(0, len(vals)):
       line = (
@@ -122,7 +122,7 @@ def linescan(out,ag,n,lowthr,highthr,offset=0): # РЎРєР°РЅРёСЂРѕРІР°РЅРёРµ РЅР°Р
       else:
          Print(out, line, color="red")
 
-   return res #СЃРїРёСЃРѕРє СЃ РЅРѕРјРµСЂР°РјРё РЅРµРёСЃРїСЂР°РІРЅС‹С… РєР°РЅР°Р»РѕРІ
+   return res #список с номерами неисправных каналов
 
 
 
@@ -177,10 +177,10 @@ def Deltacalc(list1,list2):
 
 
 #------------------------------------------------------------------------------
-def CheckThreshold(out,values, threshold): #РїСЂРѕРІРµСЂРєР° РїСЂРѕС…РѕР¶РґРµРЅРёСЏ РїРѕСЂРѕРіР°
+def CheckThreshold(out,values, threshold): #проверка прохождения порога
     ret = True
     text = "SUCCESSFUL "
-    deltaMax = max(values) #РІС‹Р±РѕСЂ СЃР°РјРѕРіРѕ Р±РѕР»СЊС€РѕРіРѕ РѕС‚РєР»РѕРЅРµРЅРёСЏ; values - СЌС‚Рѕ РјР°СЃСЃРёРІ
+    deltaMax = max(values) #выбор самого большого отклонения; values - это массив
     if (deltaMax > threshold):
         text = "FAILED "
         ret = False
@@ -200,16 +200,16 @@ def MeasurePointAIM(out, ctd1620, agilent, generator, moduleChannels, offsetGen,
 
     Print(out, title.center(75, '-'))
     generator.SetOffset(offsetGen)
-    Print(out, "РџР°СЂР°РјРµС‚СЂС‹ РіРµРЅРµСЂР°С‚РѕСЂР°: DC - " + f"{offsetGen}" + "V")
+    Print(out, "Параметры генератора: DC - " + f"{offsetGen}" + "V")
     time.sleep(2)
     WaitStable(ctd1620, agilent, moduleChannels, delta=delta)
     mult, AIMVolt = Measure(ctd1620, agilent, moduleChannels, average=10, delta=delta / 2.0)
     result = MeasureResult(mult, AIMVolt, delta)
     #PrintArrayCompareTable(out, "", mult, AIMVolt, result, threshold=delta / 2)
-    Print(out, f"РќР°РїСЂСЏР¶РµРЅРёРµ РЅР° РјСѓР»СЊС‚РёРјРµС‚СЂРµ {mult}, mV")
+    Print(out, f"Напряжение на мультиметре {mult}, mV")
     header = (
-            f"{'РљР°РЅР°Р»':<6} | "
-            f"{'РќР°РїСЂСЏР¶РµРЅРёРµ AIM':>18}" 
+            f"{'Канал':<6} | "
+            f"{'Напряжение AIM':>18}" 
         )
     for i in range(0, len(AIMVolt)):
         line = (
@@ -222,7 +222,7 @@ def MeasurePointAIM(out, ctd1620, agilent, generator, moduleChannels, offsetGen,
 
 def CalcCoefCalibration(out, ctd1620, fileName, mult1, mult2, AIMVolt1, AIMVolt2):
 
-   Print(out, "Р Р°СЃС‡С‘С‚ РєР°Р»РёР±СЂРѕРІРѕС‡РЅС‹С… РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ".center(75, '-'))
+   Print(out, "Расчёт калибровочных коэффициентов".center(75, '-'))
    calbGain = abs((mult2 - mult1) / (AIMVolt2 - AIMVolt1))
    calbOffset = ((AIMVolt1 + AIMVolt2) - (mult1 + mult2) / calbGain) / 2.0
    result_3 = []
@@ -241,13 +241,13 @@ def CalcCoefCalibration(out, ctd1620, fileName, mult1, mult2, AIMVolt1, AIMVolt2
    for i in range(len(calbOffset)):
       result_4.append("OK")
 
-   PrintChannelMeasureTable(out, "OffsetAim", calbOffset, -calbOffset, result_4)
+   PrintChannelMeasureTable(out, "OffsetAim", calbOffset, 0, result_4)
 
    testIsOk = CheckGain(out, calbGain, 0.1)
 
 
    #-----------------------------------------------------
-   #Р·Р°РїРёСЃСЊ РєР°Р»РёР±СЂРѕРІРѕС‡РЅРѕРіРѕ РєРѕСЌС„С„РёС†РёРµРЅС‚Р° РІ РїР»Р°С‚Сѓ
+   #запись калибровочного коэффициента в плату
    Print(out, "Write".center(75, '-'))
    WriteCalibrate(out, ctd1620, fileName, calbGain, calbOffset)
 
@@ -257,10 +257,10 @@ def CalcCoefCalibration(out, ctd1620, fileName, mult1, mult2, AIMVolt1, AIMVolt2
    return testIsOk
 
 def CheckDcMeasureAIM(out, ctd1620, agilent, generator, moduleChannels, offsetGen, delta, moduleInput):
-   Print(out, "РџСЂРѕРІРµСЂРєР° РёР·РјРµСЂРµРЅРёСЏ РїРѕ РїРѕСЃС‚РѕСЏРЅРЅРѕРјСѓ С‚РѕРєСѓ РїРѕСЃР»Рµ РєР°Р»РёР±СЂРѕРІРєРё".center(75, '-'))
+   Print(out, "Проверка измерения по постоянному току после калибровки".center(75, '-'))
    generator.SetOffset(offsetGen)
    time.sleep(3)
-   Print(out, "РџР°СЂР°РјРµС‚СЂС‹ РіРµРЅРµСЂР°С‚РѕСЂР°: DC - " + f"{offsetGen}" + "V")
+   Print(out, "Параметры генератора: DC - " + f"{offsetGen}" + "V")
    # Measure DC
    Print(out, "VOLT:DC")
    WaitStable(ctd1620, agilent, moduleChannels, delta=delta)
@@ -288,11 +288,11 @@ def CheckDcMeasureAIM(out, ctd1620, agilent, generator, moduleChannels, offsetGe
 
 def CheckAcMeasureAIM(out, ctd1620, agilent, generator, moduleChannels, offsetGen, delta):
    
-   Print(out, "РџСЂРѕРІРµСЂРєР° РёР·РјРµСЂРµРЅРёСЏ РїРѕ РїРµСЂРµРјРµРЅРЅРѕРјСѓ С‚РѕРєСѓ РїРѕСЃР»Рµ РєР°Р»РёР±СЂРѕРІРєРё".center(75, '-'))
+   Print(out, "Проверка измерения по переменному току после калибровки".center(75, '-'))
    agilent.SetMeasurement("VOLT:AC") #from agilent py
    generator.SetupChannel(1, freq = 160.0, ampl = 8.0, offset = offsetGen) #from TGA1240 py
    time.sleep(3) #from time
-   Print(out, "РџР°СЂР°РјРµС‚СЂС‹ РіРµРЅРµСЂР°С‚РѕСЂР°: AC - Offset = " + f"{offsetGen}" + "V, " + "Freq = 160 Hz, " + "Ampl = 8 V, ")
+   Print(out, "Параметры генератора: AC - Offset = " + f"{offsetGen}" + "V, " + "Freq = 160 Hz, " + "Ampl = 8 V, ")
    # Measure AC
    Print(out, "VOLT:AC")
    WaitStable(ctd1620, agilent, moduleChannels, delta=delta, param=2) #local def
@@ -301,7 +301,7 @@ def CheckAcMeasureAIM(out, ctd1620, agilent, generator, moduleChannels, offsetGe
    
    result_6 = []
    for value in in4:
-       if (abs(out4-value) > 3.0): #РІ РёС‚РѕРіРµ РєР°РєР°СЏ РіСЂР°РЅРёС†Р°
+       if (abs(out4-value) > 3.0): #в итоге какая граница
            result_6.append('FAILED')
        else:
            result_6.append('OK')
@@ -317,12 +317,12 @@ def CheckAcMeasureAIM(out, ctd1620, agilent, generator, moduleChannels, offsetGe
 
 def CheckDcMeasureAuxAim(out, agilent, generator, offsetGen, moduleChannels , in3, moduleType):
    
-   Print(out, "РџСЂРѕРІРµСЂРєР° AUX РІС‹С…РѕРґРѕ РїРѕ РїРѕСЃС‚РѕСЏРЅРЅРѕРјСѓ РЅР°РїСЂСЏР¶РµРЅРёСЋ".center(75, '-'))
+   Print(out, "Проверка AUX выходо по постоянному напряжению".center(75, '-'))
    # Output test with DC
    agilent.SetMeasurement('VOLT:DC')
    generator.SetOffset(offsetGen)
    time.sleep(3)
-   Print(out, "РџР°СЂР°РјРµС‚СЂС‹ РіРµРЅРµСЂР°С‚РѕСЂР°: DC - " + f"{offsetGen}" + "mV")
+   Print(out, "Параметры генератора: DC - " + f"{offsetGen}" + "mV")
    print("DC output check:")
    if (moduleType == 'AIM-211'):
      out5 = lineread(out,agilent,moduleChannels,inout=10,offset=6)
@@ -341,11 +341,11 @@ def CheckDcMeasureAuxAim(out, agilent, generator, offsetGen, moduleChannels , in
 
 def CheckAcMeasureAuxAim(out, agilent, generator, offsetGen, moduleChannels , in4, moduleType):
    
-   Print(out, "РџСЂРѕРІРµСЂРєР° AUX РІС‹С…РѕРґРѕ РїРѕ РїРµСЂРµРјРµРЅРЅРѕРјСѓ РЅР°РїСЂСЏР¶РµРЅРёСЋ".center(75, '-'))
+   Print(out, "Проверка AUX выходо по переменному напряжению".center(75, '-'))
    agilent.SetMeasurement("VOLT:AC")
    generator.SetupChannel(1, 160.0, 8.0, offsetGen)
    time.sleep(3)
-   Print(out, "РџР°СЂР°РјРµС‚СЂС‹ РіРµРЅРµСЂР°С‚РѕСЂР°: AC - Offset = " + f"{offsetGen}" + "V, " + "Freq = 160 Hz, " + "Ampl = 8 V, ")
+   Print(out, "Параметры генератора: AC - Offset = " + f"{offsetGen}" + "V, " + "Freq = 160 Hz, " + "Ampl = 8 V, ")
    if (moduleType == 'AIM-211'):
      out6 = lineread(out,agilent,moduleChannels,inout=10,offset=6)
    else:
@@ -376,13 +376,13 @@ def CheckOutputLines(out, ctd1620, agilent, moduleType, moduleChannels, fileName
         error_lines = linescan(out, agilent, moduleChannels, -25.175, -23.475)
 
     if len(error_lines) > 0:
-        Print(out, "РќРµРїСЂР°РІРёР»СЊРЅС‹Рµ РЅР°РїСЂСЏР¶РµРЅРёСЏ РЅР° РєР°РЅР°Р»Р°С…: " + str(error_lines))
+        Print(out, "Неправильные напряжения на каналах: " + str(error_lines))
         out.close()
         playsound(SayFailed)
         post_report.post_report(fileName + '.log')
         quit()
     else:
-        Print(out, "Р РµР·СѓР»СЊС‚Р°С‚: ")
+        Print(out, "Результат: ")
         Print(out, "SUCCESSFUL", color="green")
         Print(out, "")
 

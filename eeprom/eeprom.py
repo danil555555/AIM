@@ -6,13 +6,13 @@ from measurements.printInfo import *
 from measurements import conv_cfg_mem
 
 def ManualInput():
-    NAME = input('Р’РІРµРґРёС‚Рµ NAME: ')
+    NAME = input('Введите NAME: ')
     if len(NAME)==0:
-         print("РќРµРІРµСЂРЅРѕРµ РёРјСЏ")
-    DNP  = input('Р’РІРµРґРёС‚Рµ DNP: ')
+         print("Неверное имя")
+    DNP  = input('Введите DNP: ')
     if len(DNP)==0:
-         print("РќРµРІРµСЂРЅРѕРµ DNP")
-    SN   = input('Р’Р’РµРґРёС‚Рµ SN: ')
+         print("Неверное DNP")
+    SN   = input('ВВедите SN: ')
     print(NAME+','+DNP+','+SN)
     return { "Name": NAME, "DNP": DNP, "SN": SN }
 
@@ -152,7 +152,7 @@ def GetFileName(moduleName):
 #------------------------------------------------------------------------------
 def moduleInfoModify(moduleInfo,AIM,dnp_change):
        data = moduleInfo
-       # Р—Р°РјРµРЅР° СЃРµСЂРёР№РЅРѕРіРѕ РЅРѕРјРµСЂР°
+       # Замена серийного номера
    
        index = findtag(data,'SERL')
        if index >= 0:
@@ -165,11 +165,11 @@ def moduleInfoModify(moduleInfo,AIM,dnp_change):
            serl_old = data[index:index+18]
            serl_new = struct.pack('<4sl10s', b'DATE', 3, str.encode(date))
            data = data.replace(serl_old, serl_new)
-       # Р—Р°РјРµРЅР° DNP
+       # Замена DNP
        if dnp_change:
           dnp_size = len(AIM['DNP'])
           if dnp_size != 10 and dnp_size != 9:
-              quit('ERROR !!! Р Р°Р·РјРµСЂ DNP РЅРµ СЂР°РІРµРЅ 10')
+              quit('ERROR !!! Размер DNP не равен 10')
           if(dnp_size == 9):
               AIM['DNP'] += '\0'
           index = findtag(data,'DNP:')
@@ -186,46 +186,46 @@ def moduleInfoModify(moduleInfo,AIM,dnp_change):
 
 def ReadCalibrate(data):
     """
-    Р Р°СЃРїР°РєРѕРІРєР° РєР°Р»РёР±СЂРѕРІРѕС‡РЅС‹С… РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ РёР· EEPROM.
+    Распаковка калибровочных коэффициентов из EEPROM.
 
-    Р’РѕР·РІСЂР°С‰Р°РµС‚:
-    date   - РґР°С‚Р° РєР°Р»РёР±СЂРѕРІРєРё
-    gains  - РјР°СЃСЃРёРІ Gain
-    offsets - РјР°СЃСЃРёРІ Offset
+    Возвращает:
+    date   - дата калибровки
+    gains  - массив Gain
+    offsets - массив Offset
     """
 
     if data is None or len(data) < 16:
-        print("РљР°Р»РёР±СЂРѕРІРѕС‡РЅС‹Рµ РґР°РЅРЅС‹Рµ РїСѓСЃС‚С‹Рµ РёР»Рё СЃР»РёС€РєРѕРј РєРѕСЂРѕС‚РєРёРµ")
+        print("Калибровочные данные пустые или слишком короткие")
         return None, None, None
 
     index = findtag(data, 'CALB')
 
     if index < 0:
-        print("РўРµРі CALB РЅРµ РЅР°Р№РґРµРЅ")
+        print("Тег CALB не найден")
         return None, None, None
 
-    # РџСЂРѕРІРµСЂСЏРµРј Р·Р°РіРѕР»РѕРІРѕРє CALB
+    # Проверяем заголовок CALB
     tag, size_calb = struct.unpack('<4sL', data[index:index+8])
 
     if tag.decode('ASCII') != 'CALB':
-        print("Р­С‚Рѕ РЅРµ Р±Р»РѕРє CALB")
+        print("Это не блок CALB")
         return None, None, None
 
     pos = index + 8
 
-    # Р§РёС‚Р°РµРј СЂР°Р·РјРµСЂ СЃС‚СЂРѕРєРё РґР°С‚С‹
+    # Читаем размер строки даты
     date_size = struct.unpack('<L', data[pos:pos+4])[0]
     pos += 4
 
-    # Р§РёС‚Р°РµРј РґР°С‚Сѓ
+    # Читаем дату
     date = data[pos:pos+date_size].decode('CP1251')
     pos += date_size
 
-    # Р’С‹СЂР°РІРЅРёРІР°РЅРёРµ РґРѕ 4 Р±Р°Р№С‚
+    # Выравнивание до 4 байт
     if date_size % 4:
         pos += 4 - date_size % 4
 
-    # Р§РёС‚Р°РµРј РєРѕР»РёС‡РµСЃС‚РІРѕ РєР°РЅР°Р»РѕРІ
+    # Читаем количество каналов
     channels = struct.unpack('<L', data[pos:pos+4])[0]
     pos += 4
 
@@ -244,7 +244,7 @@ def ReadCalibrate(data):
 
     return date, np.array(gains), np.array(offsets)
 
-def GetCalibParam(ctd1620, SlotNumber, moduleName):
+def GetCalibParam(out, ctd1620, SlotNumber, moduleName):
     
     REFERENCE_OFFSETS = {
     "AIM-812": 12100.0,
@@ -261,23 +261,23 @@ def GetCalibParam(ctd1620, SlotNumber, moduleName):
 
     #if oldGain is not None and oldOffset is not None:
     if oldGain is not None:
-        print("="*40)
-        print("РљР°Р»РёР±СЂРѕРІРѕС‡РЅС‹Рµ РєРѕСЌС„С„РёС†РёРµРЅС‚С‹ РёР· EEPROM")
-        print("Р”Р°С‚Р° РєР°Р»РёР±СЂРѕРІРєРё:", calbDate)
+
+        LogBlockStart(out,"Чтение калибровочных коэффициентов из EEPROM")
+        Print(out, "Дата калибровки: " + calbDate)
 
         header = (f"{'CH':<6} | "
-             f"{'Gain':>9} | "
+             f"{'Gain':>9} | " 
              f"{'Offset, mV':>12} | "
              f"{'Result':>10} | "
              )
         
-        print(header)
-        print("-" * len(header))
+        Print(out, header)
+        Print(out, "-" * len(header))
         result = []
         for i in range(len(oldGain)):
 
             if moduleName not in REFERENCE_OFFSETS:
-                raise ValueError("РќРµРёР·РІРµСЃС‚РЅС‹Р№ С‚РёРї РїР»Р°С‚С‹: " + str(moduleName))
+                raise ValueError("Неизвестный тип платы: " + str(moduleName))
             else:
                 refOffset = REFERENCE_OFFSETS[moduleName]
 
@@ -296,51 +296,51 @@ def GetCalibParam(ctd1620, SlotNumber, moduleName):
             f"{result[i]:>10} | "
             )
 
-            print(line)
-            print("-" * len(header))
+            Print(out, line)
+            Print(out, "-" * len(header))
             
         if all(value == "OK" for value in result):
-            print("Р РµР·СѓР»СЊС‚Р°С‚ РїСЂРѕРІРµСЂРєРё РєР°Р»РёР±СЂРѕРІРѕС‡РЅС‹С… РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ: РЈРЎРџР•РЁРќРћ")
-            print("="*40)
+            Print(out, "Результат проверки калибровочных коэффициентов: УСПЕШНО")
+            LogBlockEnd(out)
             return "OK"
         else:
-            print("Р РµР·СѓР»СЊС‚Р°С‚ РїСЂРѕРІРµСЂРєРё РєР°Р»РёР±СЂРѕРІРѕС‡РЅС‹С… РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ: РћРЁРР‘РљРђ")
-            print("="*40)
+            Print(out, "Результат проверки калибровочных коэффициентов: ОШИБКА")
+            LogBlockEnd(out)
             return "FAILED"
     
     else:
-        print("РљР°Р»РёР±СЂРѕРІРѕС‡РЅС‹Рµ РєРѕСЌС„С„РёС†РёРµРЅС‚С‹ РЅРµ РЅР°Р№РґРµРЅС‹")
-        print("="*40)
+        Print(out, "Калибровочные коэффициенты не найдены")
+        LogBlockEnd(out)
         return "NOT_FOUND"
     
     
 
 
 def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):  
-    #РµСЃС‚СЊ РІРѕРїСЂРѕСЃС‹
+    #есть вопросы
     """
-    Р§РёС‚Р°РµС‚/РѕР±РЅРѕРІР»СЏРµС‚ EEPROM РїР»Р°С‚С‹, РїРѕР»СѓС‡Р°РµС‚ РїР°СЂР°РјРµС‚СЂС‹ РјРѕРґСѓР»СЏ,
-    Р·Р°РіСЂСѓР¶Р°РµС‚ С‚РµСЃС‚РѕРІСѓСЋ РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ РїСЂРё РїРµСЂРІРѕРј Р·Р°РїСѓСЃРєРµ.
+    Читает/обновляет EEPROM платы, получает параметры модуля,
+    загружает тестовую конфигурацию при первом запуске.
 
-    Р’РѕР·РІСЂР°С‰Р°РµС‚:
+    Возвращает:
     moduleInfo, moduleType, moduleName, moduleDNP, moduleDate,
     moduleChannels, moduleInput, moduleUMin, moduleUMax,
     first_start, old_moduleName
     """
 
-    # 1. Р§С‚РµРЅРёРµ EEPROM
-    print("Р§С‚РµРЅРёРµ РёРЅС„РѕСЂРјР°С†РёРё СЃ РїР»Р°С‚С‹ AIM".center(40,"="))
+    # 1. Чтение EEPROM
+    print("Чтение информации с платы AIM".center(40,"="))
     moduleInfo = ctd1620.ReadEPROM(0, SlotNumber, 0)
 
     if moduleInfo is None or len(moduleInfo) <= 2:
 
         dnp_change = True
-        print('РќРµ СѓРґР°Р»РѕСЃСЊ СЃС‡РёС‚Р°С‚СЊ РґР°РЅРЅС‹Рµ РёР· EEPROM РїР»Р°С‚С‹')
+        print('Не удалось считать данные из EEPROM платы')
         print("-" * 20)
-        print("1. Р’РІРµСЃС‚Рё РґР°РЅРЅС‹Рµ РІСЂСѓС‡РЅСѓСЋ ")
-        print("2. Р’Р·СЏС‚СЊ РґР°РЅРЅС‹Рµ РёР· QR")
-        print("3. Р’С‹С…РѕРґ")
-        choice = input("Р’С‹Р±РµСЂРёС‚Рµ РґРµР№СЃС‚РІРёРµ: ").strip()
+        print("1. Ввести данные вручную ")
+        print("2. Взять данные из QR")
+        print("3. Выход")
+        choice = input("Выберите действие: ").strip()
 
         if choice == "1":
             AIM = ManualInput()
@@ -356,44 +356,44 @@ def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):
             moduleInfo = moduleInfoModify(moduleInfo, AIM, dnp_change)
             
         elif choice == "3":
-            quit("Р Р°Р±РѕС‚Р° РїСЂРѕРіСЂР°РјРјС‹ Р·Р°РІРµСЂС€РµРЅР°")
+            quit("Работа программы завершена")
 
         else:
-            quit("РћС€РёР±РєР°, РЅСѓР¶РЅРѕ РІС‹Р±СЂР°С‚СЊ РїСѓРЅРєС‚ 1-3")
+            quit("Ошибка, нужно выбрать пункт 1-3")
         
         res = ctd1620.WriteEPROM(0, SlotNumber, 0, moduleInfo)
         if not res:
-            quit('РќРµ РјРѕРіСѓ Р·Р°РїРёСЃР°С‚СЊ РёРЅС„РѕСЂРјР°С†РёСЋ РІ РїР»Р°С‚Сѓ')
+            quit('Не могу записать информацию в плату')
         ctd1620.HWRestart()
         time.sleep(2)
         moduleInfo = ctd1620.ReadEPROM(0, SlotNumber, 0)
 
         if moduleInfo is None or len(moduleInfo) <= 2:
-            quit("РќРµ СѓРґР°Р»РѕСЃСЊ СЃС‡РёС‚Р°С‚СЊ EEPROM РїРѕСЃР»Рµ Р·Р°РїРёСЃРё")
-        print("Р”Р°РЅРЅС‹Рµ СѓСЃРїРµС€РЅРѕ Р·Р°РїРёСЃР°РЅС‹ РІ EEPROM")
+            quit("Не удалось считать EEPROM после записи")
+        print("Данные успешно записаны в EEPROM")
 
     else:
         dnp_change = False
-        print("Р”Р°РЅРЅС‹Рµ СѓСЃРїРµС€РЅРѕ СЃС‡РёС‚Р°РЅС‹ РёР· EEPROM AIM")
-        # 2. РџСЂРѕРІРµСЂРєР° СЃРѕРѕС‚РІРµС‚СЃС‚РІРёСЏ С‚РёРїР° РїР»Р°С‚С‹
+        print("Данные успешно считаны из EEPROM AIM")
+        # 2. Проверка соответствия типа платы
         moduleType = GetModuleType(moduleInfo)
 
         if AIM is not None and moduleType != AIM['Name']:
             dnp_change = True
 
-            print('РўРёРї РїР»Р°С‚С‹ РІ EEPROM РѕС‚Р»РёС‡Р°РµС‚СЃСЏ РѕС‚ С‚РёРїР° РїР»Р°С‚С‹ СѓРєР°Р·Р°РЅРЅРѕРіРѕ РІ QR')        
+            print('Тип платы в EEPROM отличается от типа платы указанного в QR')        
             print("-" * 20)
             print("EEPROM:", moduleType)
             print("QR:", AIM["Name"])
             print("-" * 20)
-            print("1. РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РґР°РЅРЅС‹Рµ РёР· EEPROM")
-            print("2. Р’Р·СЏС‚СЊ РґР°РЅРЅС‹Рµ РёР· QR")
-            print("3. Р’С‹С…РѕРґ")        
+            print("1. Использовать данные из EEPROM")
+            print("2. Взять данные из QR")
+            print("3. Выход")        
 
-            choice = input("Р’С‹Р±РµСЂРёС‚Рµ РґРµР№СЃС‚РІРёРµ: ").strip()
+            choice = input("Выберите действие: ").strip()
             if choice == "1":
                 dnp_change = False
-                print("РСЃРїРѕР»СЊР·СѓСЋС‚СЃСЏ РґР°РЅРЅС‹Рµ РёР· EEPROM")
+                print("Используются данные из EEPROM")
 
             elif choice == "2":
                 dnp_change = True
@@ -406,30 +406,30 @@ def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):
                 res = ctd1620.WriteEPROM(0, SlotNumber, 0, moduleInfo)
 
                 if not res:
-                    quit('РќРµ РјРѕРіСѓ Р·Р°РїРёСЃР°С‚СЊ РёРЅС„РѕСЂРјР°С†РёСЋ РІ РїР»Р°С‚Сѓ')
+                    quit('Не могу записать информацию в плату')
                 ctd1620.HWRestart()
                 time.sleep(2)
                 moduleInfo = ctd1620.ReadEPROM(0, SlotNumber, 0)
 
                 if moduleInfo is None or len(moduleInfo) <= 2:
-                    quit("РќРµ СѓРґР°Р»РѕСЃСЊ СЃС‡РёС‚Р°С‚СЊ EEPROM РїРѕСЃР»Рµ Р·Р°РїРёСЃРё")
-                print("Р”Р°РЅРЅС‹Рµ РёР· QR Р·Р°РїРёСЃР°РЅС‹ РІ EEPROM")
+                    quit("Не удалось считать EEPROM после записи")
+                print("Данные из QR записаны в EEPROM")
 
             elif choice == "3":
-                quit("Р Р°Р±РѕС‚Р° РїСЂРѕРіСЂР°РјРјС‹ Р·Р°РІРµСЂС€РµРЅР°")
+                quit("Работа программы завершена")
             else:
-                quit("РћС€РёР±РєР°, РЅСѓР¶РЅРѕ РІС‹Р±СЂР°С‚СЊ РїСѓРЅРєС‚ 1-3")
+                quit("Ошибка, нужно выбрать пункт 1-3")
 
         else:
-            print("Р”Р°РЅРЅС‹Рµ РёР· EEPROM РїР»Р°С‚С‹ AIM СЃРѕРІРїР°Р»Рё СЃ РґР°РЅРЅС‹Рј QR")
+            print("Данные из EEPROM платы AIM совпали с данным QR")
         print("="*40)
         print("")
         print("")
-    # 3. РњРѕРґРёС„РёРєР°С†РёСЏ EEPROM-РґР°РЅРЅС‹С…
+    # 3. Модификация EEPROM-данных
     #if len(sys.argv) <= 1:
         #moduleInfo = moduleInfoModify(moduleInfo, AIM, dnp_change)
 
-    # 4. РР·РІР»РµС‡РµРЅРёРµ РїР°СЂР°РјРµС‚СЂРѕРІ РїР»Р°С‚С‹
+    # 4. Извлечение параметров платы
     moduleType = GetModuleType(moduleInfo)
     moduleName = GetModuleName(moduleInfo)
     moduleDNP = GetModuleDNP(moduleInfo)
@@ -438,45 +438,45 @@ def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):
     moduleInput = GetModuleInput(moduleInfo)
     moduleUMin, moduleUMax = GetModuleVoltage(moduleInfo)
 
-    # 5. Р—Р°РїРёСЃСЊ EEPROM РѕР±СЂР°С‚РЅРѕ РІ РїР»Р°С‚Сѓ
+    # 5. Запись EEPROM обратно в плату
     #if len(sys.argv) <= 1:
         #res = ctd1620.WriteEPROM(0, SlotNumber, 0, moduleInfo)
 
         #if not res:
-            #quit('РќРµ РјРѕРіСѓ Р·Р°РїРёСЃР°С‚СЊ РёРЅС„РѕСЂРјР°С†РёСЋ РІ РїР»Р°С‚Сѓ')
+            #quit('Не могу записать информацию в плату')
 
         #ctd1620.HWRestart()
 
-    # 6. РџСЂРѕРІРµСЂРєР°, С‡С‚Рѕ СЃРµСЂРёСЏ РїР»Р°С‚ РѕРґРЅРѕРіРѕ С‚РёРїР°
+    # 6. Проверка, что серия плат одного типа
     
-    print("РџСЂРѕРІРµСЂРєР° С‚РµРєСѓС‰РёР№ РїР»Р°С‚С‹ РЅР° СЃРѕРІРїР°РґРµРЅРёРµ С‚РёРїР°".center(40,"="))
+    print("Проверка текущий платы на совпадение типа".center(40,"="))
     if not first_start and (moduleType != old_moduleName):
-       quit("РџР»Р°С‚Р° РЅРµ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓРµС‚ РїРµСЂРІРѕР№ РїР»Р°С‚Рµ СЃРµСЂРёРё\n" + "РџРµСЂРІР°СЏ РїР»Р°С‚Р°: " + str(old_moduleName)
-            + "\nРўРµРєСѓС‰Р°СЏ РїР»Р°С‚Р°: "
+       quit("Плата не соответствует первой плате серии\n" + "Первая плата: " + str(old_moduleName)
+            + "\nТекущая плата: "
             + str(moduleType)
         )
     else:
        if first_start:
-           print("РџРµСЂРІС‹Р№ Р·Р°РїСѓСЃРє cС‚РµРЅРґР°")
+           print("Первый запуск cтенда")
        else:
-           print("РџР»Р°С‚Р° СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓРµС‚ СЃРµСЂРёРё РїРµСЂРІРѕР№ РїР»Р°С‚С‹")
+           print("Плата соответствует серии первой платы")
        old_moduleName = moduleType
        old_DNP = moduleDNP
        if first_start:
           
           conffile = './' + moduleType + '/' + moduleType + '.Calibration.xml'
           Ini_conf = conv_cfg_mem.XmlToIni(conffile)
-          test = ctd1620.Command('STCF', str.encode(Ini_conf), 4) # Р—Р°РіСЂСѓР·РєР° РєРѕРЅС„РёРіСѓСЂР°С†РёРё
+          test = ctd1620.Command('STCF', str.encode(Ini_conf), 4) # Загрузка конфигурации
           if not test:
-              quit('РќРµ РјРѕРіСѓ Р·Р°РіСЂСѓР·РёС‚СЊ РІ С†РёС„СЂРѕРІСѓСЋ РїР»Р°С‚Сѓ С‚РµСЃС‚РѕРІСѓСЋ РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ')
+              quit('Не могу загрузить в цифровую плату тестовую конфигурацию')
           else:
-              print('РўРµСЃС‚РѕРІР°СЏ РєРѕРЅС„РёРіСѓР°С†РёСЏ Р·Р°РіСЂСѓР¶РµРЅР°')
+              print('Тестовая конфигуация загружена')
 
           res=ctd1620.FixHardwareConfig()
           if not res:
-             quit('РќРµ РјРѕРіСѓ Р·Р°С„РёРєСЃРёСЂРѕРІР°С‚СЊ Р°РїРїР°СЂР°С‚РЅСѓСЋ РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ')
+             quit('Не могу зафиксировать аппаратную конфигурацию')
           else:
-             print('РђРїРїР°СЂР°С‚РЅР°СЏ РєРѕРЅС„РёРіСѓСЂР°С†РёСЏ Р·Р°С„РёРєСЃРёСЂРѕРІР°РЅР°')
+             print('Аппаратная конфигурация зафиксирована')
              first_start = False
              
     print("".center(40,"="))
@@ -485,7 +485,7 @@ def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):
 
     fileName = GetFileName(moduleName)
     logfile = open(fileName + '.log', 'w')
-    Print(logfile, f"РҐР°СЂР°РєС‚РµСЂРёСЃС‚РёРєРё {moduleType}".center(40, '='))
+    Print(logfile, f"Характеристики {moduleType}".center(40, '='))
     Print(logfile, "Module  : " + moduleName[0:7])
     Print(logfile, "Number  : " + moduleName[8:])
     Print(logfile, "Channels: " + str(moduleChannels))

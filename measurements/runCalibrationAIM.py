@@ -30,22 +30,23 @@ def RunCalibrationAIM(context: object) -> bool:
     OffsetMax, OffsetMin, Offset, Delta = CalcSafeOffsetsGen(moduleUMin, moduleUMax, moduleInput, Delta)
 
     #CheckOutputLines(logfile, ctd1620, agilent, moduleType, moduleChannels, fileName)
-
-    Print(logfile, "РЎР±СЂРѕСЃ РєР°Р»РёР±СЂРѕРІРєРё РїР»Р°С‚С‹".center(75, '-'))
+    LogBlockStart(logfile, "Калибровка платы")
+    Print(logfile, "Сброс калибровки платы".center(75, '-'))
     # Reset calibration
     calbGain = np.ones(moduleChannels, dtype=float)
     calbOffset = np.zeros(moduleChannels, dtype=float)
     WriteCalibrate(logfile, ctd1620, fileName, calbGain, calbOffset)
 
     generator.SetupChannel(1, wform='DC')
-    agilent.ConnectChan(9)  # Р Р°Р±РѕС‚Р°РµРј СЃ 9 РєР°РЅР°Р»РѕРј РґР»СЏ РёР·РјРµСЂРµРЅРёР№ С‚РµРєСѓС‰РµРіРѕ РЅР°РїСЂСЏР¶РµРЅРёСЏ РЅР°РїСЂСЏРјСѓСЋ СЃ РіРµРЅРµСЂР°С‚РѕСЂР°
+    agilent.ConnectChan(9)  # Работаем с 9 каналом для измерений текущего напряжения напрямую с генератора
     agilent.SetMeasurement("VOLT:DC")
 
-    mult_high_volt_1, aim_high_volt_1 = MeasurePointAIM(logfile, ctd1620, agilent, generator, moduleChannels, OffsetMax, Delta, "РР·РјРµСЂРµРЅРёРµ 1: РІРµСЂС…РЅСЏСЏ С‚РѕС‡РєР° РєР°Р»РёР±СЂРѕРІРєРё")
-    mult_low_volt_2, aim_low_volt_2 = MeasurePointAIM(logfile, ctd1620, agilent, generator, moduleChannels, OffsetMin, Delta, "РР·РјРµСЂРµРЅРёРµ 2: РЅРёР¶РЅСЏСЏ С‚РѕС‡РєР° РєР°Р»РёР±СЂРѕРІРєРё")
+    mult_high_volt_1, aim_high_volt_1 = MeasurePointAIM(logfile, ctd1620, agilent, generator, moduleChannels, OffsetMax, Delta, "Измерение 1: верхняя точка калибровки")
+    mult_low_volt_2, aim_low_volt_2 = MeasurePointAIM(logfile, ctd1620, agilent, generator, moduleChannels, OffsetMin, Delta, "Измерение 2: нижняя точка калибровки")
 
     result = CalcCoefCalibration(logfile, ctd1620, fileName, mult_high_volt_1, mult_low_volt_2, aim_high_volt_1, aim_low_volt_2)
 
+    LogBlockEnd(logfile)
     return result
     #in3 = CheckDcMeasureAIM(logfile, ctd1620, agilent, generator, moduleChannels, Offset, Delta, moduleInput)
     #in4 = CheckAcMeasureAIM(logfile, ctd1620, agilent, generator, moduleChannels, Offset, Delta)

@@ -6,6 +6,7 @@ from stand import PrepareStand
 from measurements.runCoefAIM import GetCalibrationInfoAIM
 from measurements.runTestAIM import RunTestAIM
 from measurements.runCalibrationAIM import RunCalibrationAIM
+from measurements.printInfo import *
 from tools.Agilent34401A import Agilent34401A
 from tools.TGA1240 import TGA1240
 
@@ -16,11 +17,11 @@ init()
 def printMainMenu() -> None:
     print("")
     print("")
-    print("РўРµСЃС‚ AIM".center(75,"="))
-    print("1. РўРµСЃС‚ РїР»Р°С‚С‹")
-    print("2. РљР°Р»РёР±СЂРѕРІРєР° РїР»Р°С‚С‹")
-    print("3. РЎРјРµРЅРёС‚СЊ РјРѕРґСѓР»СЊ")
-    print("4. Р’С‹С…РѕРґ")
+    print("Тест AIM".center(75,"="))
+    print("1. Тест платы")
+    print("2. Калибровка платы")
+    print("3. Сменить модуль")
+    print("4. Выход")
     print("="*75)
     print("")
     print("")
@@ -28,33 +29,23 @@ def printMainMenu() -> None:
 
 def moduleMenu(context: dict) -> str:
     """
-    РњРµРЅСЋ СЂР°Р±РѕС‚С‹ СЃ СѓСЃС‚Р°РЅРѕРІР»РµРЅРЅС‹Рј РјРѕРґСѓР»РµРј.
+    Меню работы с установленным модулем.
 
-    Р’РѕР·РІСЂР°С‰Р°РµС‚:
-        CHANGE_MODULE вЂ” СЃРјРµРЅРёС‚СЊ РјРѕРґСѓР»СЊ;
-        EXIT          вЂ” Р·Р°РІРµСЂС€РёС‚СЊ РїСЂРѕРіСЂР°РјРјСѓ.
+    Возвращает:
+        CHANGE_MODULE — сменить модуль;
+        EXIT          — завершить программу.
     """
 
     while True:
         printMainMenu()
 
-        choice = input("Р’РІРµРґРёС‚Рµ РЅРѕРјРµСЂ РґРµР№СЃС‚РІРёСЏ: ").strip()
+        choice = input("Введите номер действия: ").strip()
 
         if choice == "1":
-            testResult = RunTestAIM(context)
-
-            if testResult:
-                print("РўРµСЃС‚РёСЂРѕРІР°РЅРёРµ РїСЂРѕС€Р»Рѕ СѓСЃРїРµС€РЅРѕ")
-            else:
-                print("РўРµСЃС‚РёСЂРѕРІР°РЅРёРµ РїСЂРѕС€Р»Рѕ РЅРµСѓСЃРїРµС€РЅРѕ")
+            RunTestAIM(context)
 
         elif choice == "2":
-            calibrateResult = RunCalibrationAIM(context)
-
-            if calibrateResult:
-                print("РљР°Р»РёР±СЂРѕРІРєР° РїСЂРѕС€Р»Р° СѓСЃРїРµС€РЅРѕ")
-            else:
-                print("РљР°Р»РёР±СЂРѕРІРєР° РїСЂРѕС€Р»Р° РЅРµСѓСЃРїРµС€РЅРѕ")
+            RunCalibrationAIM(context)
 
         elif choice == "3":
             return "CHANGE_MODULE"
@@ -63,49 +54,39 @@ def moduleMenu(context: dict) -> str:
             return "EXIT"
 
         else:
-            print("РћС€РёР±РєР°: РЅРµРѕР±С…РѕРґРёРјРѕ РІС‹Р±СЂР°С‚СЊ РїСѓРЅРєС‚ РѕС‚ 1 РґРѕ 4")
+            print("Ошибка: необходимо выбрать пункт от 1 до 4")
 
 
 def processModule(context: dict) -> str:
     """
-    РџСЂРѕРІРµСЂСЏРµС‚ СЃРѕСЃС‚РѕСЏРЅРёРµ РєР°Р»РёР±СЂРѕРІРєРё Рё РѕРїСЂРµРґРµР»СЏРµС‚ РґР°Р»СЊРЅРµР№С€СѓСЋ СЂР°Р±РѕС‚Сѓ.
+    Проверяет состояние калибровки и определяет дальнейшую работу.
 
-    Р’РѕР·РІСЂР°С‰Р°РµС‚:
-        CHANGE_MODULE вЂ” РїРµСЂРµР№С‚Рё Рє СЃР»РµРґСѓСЋС‰РµРјСѓ РјРѕРґСѓР»СЋ;
-        EXIT          вЂ” Р·Р°РІРµСЂС€РёС‚СЊ РїСЂРѕРіСЂР°РјРјСѓ.
+    Возвращает:
+        CHANGE_MODULE — перейти к следующему модулю;
+        EXIT          — завершить программу.
     """
-
+    logfile = context["logfile"]
     calibrationResult = GetCalibrationInfoAIM(context)
 
     if calibrationResult == "NOT_FOUND":
-        print("РљР°Р»РёР±СЂРѕРІРєР° РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚")
-        print("Р‘СѓРґРµС‚ РІС‹РїРѕР»РЅРµРЅР° Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєР°СЏ РєР°Р»РёР±СЂРѕРІРєР° Рё С‚РµСЃС‚РёСЂРѕРІР°РЅРёРµ")
-
+        #"Калибровка отсутствует"
+        #"Будет выполнена автоматическая калибровка и тестирование"
 
         calibrateResult = RunCalibrationAIM(context)
 
         if calibrateResult:
-            print("РљР°Р»РёР±СЂРѕРІРєР° РїСЂРѕС€Р»Р° СѓСЃРїРµС€РЅРѕ")
 
-            testResult = RunTestAIM(context)
-
-            if testResult:
-                print("РўРµСЃС‚РёСЂРѕРІР°РЅРёРµ РїСЂРѕС€Р»Рѕ СѓСЃРїРµС€РЅРѕ")
-            else:
-                print("РўРµСЃС‚РёСЂРѕРІР°РЅРёРµ Р·Р°РєРѕРЅС‡РёР»РѕСЃСЊ СЃ РѕС€РёР±РєРѕР№")
-        else:
-            print("РљР°Р»РёР±СЂРѕРІРєР° Р·Р°РєРѕРЅС‡РёР»Р°СЃСЊ СЃ РѕС€РёР±РєРѕР№")
+            RunTestAIM(context)
 
     elif calibrationResult == "FAILED":
-        print("РљР°Р»РёР±СЂРѕРІРѕС‡РЅС‹Рµ РєРѕСЌС„С„РёС†РёРµРЅС‚С‹ РЅРµРїСЂР°РІРёР»СЊРЅС‹Рµ")
-
+        pass
 
     elif calibrationResult == "OK":
         pass
 
     else:
-        print(
-            "РћС€РёР±РєР° РїСЂРѕРІРµСЂРєРё РєР°Р»РёР±СЂРѕРІРѕС‡РЅС‹С… РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРІ: "
+        Print(logfile,
+            "Ошибка проверки калибровочных коэффициентов: "
             f"{calibrationResult!r}"
         )
 
@@ -133,27 +114,28 @@ def main() -> None:
             first_start = False
 
             old_moduleName = context["moduleType"]
+            logfile = context["logfile"]
 
             action = processModule(context)
 
             if action == "CHANGE_MODULE":
-                print("РџРѕРґРіРѕС‚РѕРІСЊС‚Рµ СЃР»РµРґСѓСЋС‰РёР№ РјРѕРґСѓР»СЊ")
+                Print(logfile, "Подготовьте следующий модуль")
                 continue
 
             if action == "EXIT":
-                print("Р—Р°РІРµСЂС€РµРЅРёРµ СЂР°Р±РѕС‚С‹")
+                Print(logfile, "Завершение работы")
                 return
 
     except KeyboardInterrupt:
-        print("\nР Р°Р±РѕС‚Р° РѕСЃС‚Р°РЅРѕРІР»РµРЅР° РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј")
+        Print(logfile,"\nРабота остановлена пользователем")
 
     except Exception as error:
-        print(f"\nРљСЂРёС‚РёС‡РµСЃРєР°СЏ РѕС€РёР±РєР° РїСЂРѕРіСЂР°РјРјС‹: {error}")
+        Print(logfile, f"\nКритическая ошибка программы: {error}")
         raise
 
     finally:
 
-        print("Р—Р°РІРµСЂС€РµРЅРёРµ СЂР°Р±РѕС‚С‹ СЃРѕ СЃС‚РµРЅРґРѕРј")
+        Print(logfile, "Завершение работы со стендом")
 
 
 if __name__ == "__main__":

@@ -9,13 +9,13 @@ old_DNP = ''
 IsScanned = '../Resource/IsScanned.mp3'
 
 def ManualInput(name):
-    NAME = input('Р’РІРµРґРёС‚Рµ NAME: ')
+    NAME = input('Введите NAME: ')
     if len(NAME)==0:
          NAME = name['Name']
-    DNP  = input('Р’РІРµРґРёС‚Рµ DNP: ')
+    DNP  = input('Введите DNP: ')
     if len(DNP)==0:
          DNP = name['DNP']
-    SN   = input('Р’Р’РµРґРёС‚Рµ SN: ')
+    SN   = input('ВВедите SN: ')
     #print(NAME+','+DNP+','+SN)
     return { "Name": NAME, "DNP": DNP, "SN": SN }
 
@@ -31,7 +31,7 @@ def ScanDataMatrix(name):
     font = cv2.FONT_HERSHEY_SIMPLEX
 
     if cap.isOpened() != True:
-        quit("РљР°РјРµСЂР° РЅРµ РЅР°Р№РґРµРЅР°")
+        quit("Камера не найдена")
 
     while (cap.isOpened()):
         # Capture frame-by-frame
@@ -72,4 +72,4 @@ def ScanDataMatrix(name):
     # When everything done, release the capture
     cap.release()
     cv2.destroyAllWindows()
-    quit("РќР°Р¶Р°С‚Рѕ ESC")
+    quit("Нажато ESC")
