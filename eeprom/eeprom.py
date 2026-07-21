@@ -292,7 +292,7 @@ def GetCalibParam(ctd1620, SlotNumber, moduleName):
             line = (
             f"{'CH' + str(i + 1).zfill(2):<6} | "
             f"{oldGain[i]:>9.3f} | "
-            f"{oldOffset[i]:>9.3f} | "
+            f"{oldOffset[i]:>14.3f} | "
             f"{result[i]:>10} | "
             )
 
@@ -449,7 +449,7 @@ def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):
 
     # 6. Проверка, что серия плат одного типа
     
-    print("Проверка текущий платы на совпадение типа".center(75,"="))
+    print("Проверка текущий платы на совпадение типа".center(40,"="))
     if not first_start and (moduleType != old_moduleName):
        quit("Плата не соответствует первой плате серии\n" + "Первая плата: " + str(old_moduleName)
             + "\nТекущая плата: "
@@ -485,7 +485,7 @@ def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):
 
     fileName = GetFileName(moduleName)
     logfile = open(fileName + '.log', 'w')
-    Print(logfile, "Характеристики AIM-XXX".center(40, '='))
+    Print(logfile, f"Характеристики {moduleType}".center(40, '='))
     Print(logfile, "Module  : " + moduleName[0:7])
     Print(logfile, "Number  : " + moduleName[8:])
     Print(logfile, "Channels: " + str(moduleChannels))

@@ -39,10 +39,10 @@ def RunTestAIM(context):
 
     checkAcMeasureAuxResult = CheckAcMeasureAuxAim(logfile, agilent, generator, Offset, moduleChannels, in4, moduleType)
 
-    Print(logfile, "End".center(75, '-'))
-    logfile.close()
+    #Print(logfile, "End".center(75, '-'))
+    #logfile.close()
 
-    ctd1620.Disconnect()
+    #ctd1620.Disconnect()
 
    # Отправка лога и двоичного файла на ftp сервер
     post_report(fileName+'.log')

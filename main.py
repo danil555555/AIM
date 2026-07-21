@@ -101,7 +101,7 @@ def processModule(context: dict) -> str:
 
 
     elif calibrationResult == "OK":
-        print("Калибровочные коэффициенты исправны")
+        pass
 
     else:
         print(

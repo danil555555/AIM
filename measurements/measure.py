@@ -245,15 +245,16 @@ def CalcCoefCalibration(out, ctd1620, fileName, mult1, mult2, AIMVolt1, AIMVolt2
 
    testIsOk = CheckGain(out, calbGain, 0.1)
 
-   if testIsOk != True:
-       playsound(SayFailed)
-
-   return testIsOk
 
    #-----------------------------------------------------
    #запись калибровочного коэффициента в плату
    Print(out, "Write".center(75, '-'))
    WriteCalibrate(out, ctd1620, fileName, calbGain, calbOffset)
+
+   if testIsOk != True:
+       playsound(SayFailed)
+
+   return testIsOk
 
 def CheckDcMeasureAIM(out, ctd1620, agilent, generator, moduleChannels, offsetGen, delta, moduleInput):
    Print(out, "Проверка измерения по постоянному току после калибровки".center(75, '-'))
