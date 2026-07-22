@@ -30,19 +30,19 @@ def RunCalibrationAIM(context: object) -> bool:
     OffsetMax, OffsetMin, Offset, Delta = CalcSafeOffsetsGen(moduleUMin, moduleUMax, moduleInput, Delta)
 
     #CheckOutputLines(logfile, ctd1620, agilent, moduleType, moduleChannels, fileName)
-    LogBlockStart(logfile, "Κΰλθαπξβκΰ ολΰςϋ")
-    Print(logfile, "Ραπξρ κΰλθαπξβκθ ολΰςϋ".center(75, '-'))
+    LogBlockStart(logfile, " ")
+    Print(logfile, "  ".center(75, '-'))
     # Reset calibration
     calbGain = np.ones(moduleChannels, dtype=float)
     calbOffset = np.zeros(moduleChannels, dtype=float)
     WriteCalibrate(logfile, ctd1620, fileName, calbGain, calbOffset)
 
     generator.SetupChannel(1, wform='DC')
-    agilent.ConnectChan(9)  # Πΰαξςΰεμ ρ 9 κΰνΰλξμ δλÿ θημεπενθι ςεκσωεγξ νΰοπÿζενθÿ νΰοπÿμσώ ρ γενεπΰςξπΰ
+    agilent.ConnectChan(9)  #   9        
     agilent.SetMeasurement("VOLT:DC")
 
-    mult_high_volt_1, aim_high_volt_1 = MeasurePointAIM(logfile, ctd1620, agilent, generator, moduleChannels, OffsetMax, Delta, "Θημεπενθε 1: βεπυνÿÿ ςξχκΰ κΰλθαπξβκθ")
-    mult_low_volt_2, aim_low_volt_2 = MeasurePointAIM(logfile, ctd1620, agilent, generator, moduleChannels, OffsetMin, Delta, "Θημεπενθε 2: νθζνÿÿ ςξχκΰ κΰλθαπξβκθ")
+    mult_high_volt_1, aim_high_volt_1 = MeasurePointAIM(logfile, ctd1620, agilent, generator, moduleChannels, OffsetMax, Delta, " 1:   ")
+    mult_low_volt_2, aim_low_volt_2 = MeasurePointAIM(logfile, ctd1620, agilent, generator, moduleChannels, OffsetMin, Delta, " 2:   ")
 
     result = CalcCoefCalibration(logfile, ctd1620, fileName, mult_high_volt_1, mult_low_volt_2, aim_high_volt_1, aim_low_volt_2)
 

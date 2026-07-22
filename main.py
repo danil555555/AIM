@@ -65,7 +65,6 @@ def processModule(context: dict) -> str:
         CHANGE_MODULE — перейти к следующему модулю;
         EXIT          — завершить программу.
     """
-    logfile = context["logfile"]
     calibrationResult = GetCalibrationInfoAIM(context)
 
     if calibrationResult == "NOT_FOUND":
@@ -85,7 +84,7 @@ def processModule(context: dict) -> str:
         pass
 
     else:
-        Print(logfile,
+        print(
             "Ошибка проверки калибровочных коэффициентов: "
             f"{calibrationResult!r}"
         )
@@ -114,28 +113,27 @@ def main() -> None:
             first_start = False
 
             old_moduleName = context["moduleType"]
-            logfile = context["logfile"]
 
             action = processModule(context)
 
             if action == "CHANGE_MODULE":
-                Print(logfile, "Подготовьте следующий модуль")
+                print("Подготовьте следующий модуль")
                 continue
 
             if action == "EXIT":
-                Print(logfile, "Завершение работы")
+                print("Завершение работы")
                 return
 
     except KeyboardInterrupt:
-        Print(logfile,"\nРабота остановлена пользователем")
+        print("\nРабота остановлена пользователем")
 
     except Exception as error:
-        Print(logfile, f"\nКритическая ошибка программы: {error}")
+        print(f"\nКритическая ошибка программы: {error}")
         raise
 
     finally:
 
-        Print(logfile, "Завершение работы со стендом")
+        print("Завершение работы со стендом")
 
 
 if __name__ == "__main__":
