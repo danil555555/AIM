@@ -1,0 +1,7 @@
+pyserial
+colorama
+numpy
+opencv-python
+pylibdmtx
+playsound
+paramiko

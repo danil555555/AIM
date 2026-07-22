@@ -16,15 +16,14 @@ init()
 
 def printMainMenu() -> None:
     print("")
-    print("")
-    print("Тест AIM".center(75,"="))
+    print("Тест AIM".center(60,"="))
     print("1. Тест платы")
     print("2. Калибровка платы")
     print("3. Сменить модуль")
     print("4. Выход")
-    print("="*75)
+    print("="*60)
     print("")
-    print("")
+
 
 
 def moduleMenu(context: dict) -> str:

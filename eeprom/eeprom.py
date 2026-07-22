@@ -2,6 +2,7 @@ import struct, sys
 import datetime
 import os
 import time
+import numpy as np
 from measurements.printInfo import *
 from measurements import conv_cfg_mem
 
