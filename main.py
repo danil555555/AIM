@@ -9,6 +9,7 @@ from measurements.runCalibrationAIM import RunCalibrationAIM
 from measurements.printInfo import *
 from tools.Agilent34401A import Agilent34401A
 from tools.TGA1240 import TGA1240
+from tools.PowerSource import QJE
 
 
 init()
@@ -102,12 +103,15 @@ def main() -> None:
     generator = TGA1240("COM4")
     generator.SetupChannel(1, wform='DC')
 
+    powerSource = QJE("COM5")
+    powerSource.Connect()
+
     first_start = True
     old_moduleName = ""
 
     try:
         while True:
-            context = PrepareStand(agilent, generator, first_start, old_moduleName)
+            context = PrepareStand(agilent, generator, powerSource, first_start, old_moduleName)
 
             first_start = False
 
@@ -117,10 +121,12 @@ def main() -> None:
 
             if action == "CHANGE_MODULE":
                 print("Подготовьте следующий модуль")
+                powerSource.PowerOff()
                 continue
 
             if action == "EXIT":
                 print("Завершение работы")
+                powerSource.PowerOff()
                 return
 
     except KeyboardInterrupt:

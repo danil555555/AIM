@@ -1,11 +1,12 @@
 from tools.CTD1620 import *
+from tools.PowerSource import *
 from scanQR.scan_markers import ScanDataMatrix
 from eeprom.eeprom import *
 from measurements.printInfo import *
 
 SlotNumber = 0
 
-def PrepareStand(agilent, generator, first_start, old_moduleName):
+def PrepareStand(agilent, generator, powerSource, first_start, old_moduleName):
 
     SlotNumber = 0
     print("")
@@ -17,6 +18,9 @@ def PrepareStand(agilent, generator, first_start, old_moduleName):
     print()
     print("Подключение платы AIM-XXX".center(40, '='))
     WaitPressEnter("1. Вставьте плату, подключите AUX\n2. Нажмите Enter")
+    powerSource.SetVoltage(24.00)
+    powerSource.SetCurrent(1.500)
+    powerSource.PowerOn()
     #print("Подключение к CTD-1620")
     ctd1620 = CTD1620("10.0.0.2")
     ctd1620.Connect()
