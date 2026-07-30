@@ -8,9 +8,9 @@ from playsound import playsound
 
 from eeprom.eeprom import *
 
-IsScanned = '../Resource/IsScanned.mp3'
-SayFailed = '../Resource/TestIsFailed.mp3'
-SaySuccessful = '../Resource/TestIsSuccessful.mp3'
+IsScanned = r'./Resource/IsScanned.mp3'
+SayFailed = r'./Resource/TestIsFailed.mp3'
+SaySuccessful = r'./Resource/TestIsSuccessful.mp3'
 
 def Measure(ctd1620, agilent, channels, average=1, delta=0.1, param=0):
     #ctd1620-для чтения V,agilent - для чтения V,channels - для списка ctd1620

@@ -48,6 +48,10 @@ def RunCalibrationAIM(context: object) -> bool:
     result = CalcCoefCalibration(logfile, ctd1620, fileName, mult_high_volt_1, mult_low_volt_2, aim_high_volt_1, aim_low_volt_2)
 
     LogBlockEnd(logfile)
+    if result == True:
+        playsound(SaySuccessful)
+    else:
+        playsound(SayFailed)
     return result
     #in3 = CheckDcMeasureAIM(logfile, ctd1620, agilent, generator, moduleChannels, Offset, Delta, moduleInput)
     #in4 = CheckAcMeasureAIM(logfile, ctd1620, agilent, generator, moduleChannels, Offset, Delta)

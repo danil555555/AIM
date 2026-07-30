@@ -7,7 +7,7 @@ from playsound import playsound
 old_moduleName = ''
 old_DNP = ''
 
-IsScanned = r'/Resource/IsScanned.mp3'
+IsScanned = r'./Resource/IsScanned.mp3'
 
 def ManualInput(name):
     NAME = input('¬ведите NAME: ')

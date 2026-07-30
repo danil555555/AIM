@@ -60,10 +60,8 @@ def RunTestAIM(context):
         testIsOk = False
 
     if testIsOk == True:
-        pass
-        #playsound(SaySuccessful)
+        playsound(SaySuccessful)
     else:
-        pass
-        #playsound(SayFailed)
+        playsound(SayFailed)
     
     return testIsOk
