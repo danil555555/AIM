@@ -1,3 +1,4 @@
+# -*- coding: cp1251 -*-
 from measurements.calculate import CalcSafeOffsetsGen
 from measurements.measure import *
 

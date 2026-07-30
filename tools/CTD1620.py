@@ -1,4 +1,4 @@
-# encoding: cp1251
+# -*- coding: cp1251 -*-
 import socket, struct, time, sys
 import datetime
 

@@ -1,3 +1,4 @@
+# -*- coding: cp1251 -*-
 import numpy as np
 
 CONSOLE_WIDTH = 40
@@ -226,11 +227,11 @@ def PrintChannelMeasureTable(out, title, measured, error, result):
          Print(out, line, color = "red")
 
    Print(out, "-" * len(line))
-   max_line = (f"{'MAX':<6} | "
-               f"{'':>14} | "
-               f"{max(error):>14.3f}"
-               )
-   Print(out, max_line)
+   #max_line = (f"{'MAX':<6} | "
+    #           f"{'':>14} | "
+     #          f"{max(error):>14.3f}"
+      #         )
+   #Print(out, max_line)
    Print(out, "-" * len(header))
    Print(out, "Результат:")
    if all(r == "OK" for r in result):

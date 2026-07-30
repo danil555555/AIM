@@ -1,3 +1,4 @@
+# -*- coding: cp1251 -*-
 import numpy as np
 import time
 import math
@@ -241,7 +242,7 @@ def CalcCoefCalibration(out, ctd1620, fileName, mult1, mult2, AIMVolt1, AIMVolt2
    for i in range(len(calbOffset)):
       result_4.append("OK")
 
-   PrintChannelMeasureTable(out, "OffsetAim", calbOffset, 0, result_4)
+   PrintChannelMeasureTable(out, "OffsetAim", calbOffset, 0.0, result_4)
 
    testIsOk = CheckGain(out, calbGain, 0.1)
 
@@ -364,26 +365,31 @@ def CheckAcMeasureAuxAim(out, agilent, generator, offsetGen, moduleChannels , in
 def CheckOutputLines(out, ctd1620, agilent, moduleType, moduleChannels, fileName):
     ctd1620.Disconnect()
 
-    error_lines = []
+    if (moduleType.splite("-")[1][1] == "1"):
 
-    if moduleType == 'AIM-411':
-        error_lines = linescan(out, agilent, moduleChannels, 22.4, 23.7)
+        error_lines = []
 
-    elif moduleType == 'AIM-211':
-        error_lines = linescan(out, agilent, moduleChannels, 22.4, 23.7, offset=6)
+        if moduleType == 'AIM-411':
+            error_lines = linescan(out, agilent, moduleChannels, 22.4, 23.7)
 
-    elif moduleType == 'AIM-412' or moduleType == 'AIM-812':
-        error_lines = linescan(out, agilent, moduleChannels, -25.175, -23.475)
+        elif moduleType == 'AIM-211':
+            error_lines = linescan(out, agilent, moduleChannels, 22.4, 23.7, offset=6)
 
-    if len(error_lines) > 0:
-        Print(out, "Неправильные напряжения на каналах: " + str(error_lines))
-        out.close()
-        playsound(SayFailed)
-        post_report.post_report(fileName + '.log')
-        quit()
+        elif moduleType == 'AIM-412' or moduleType == 'AIM-812':
+            error_lines = linescan(out, agilent, moduleChannels, -25.175, -23.475)
+
+        if len(error_lines) > 0:
+            Print(out, "Неправильные напряжения на каналах: " + str(error_lines))
+            out.close()
+            playsound(SayFailed)
+            post_report.post_report(fileName + '.log')
+            quit()
+        else:
+            Print(out, "Результат: ")
+            Print(out, "SUCCESSFUL", color="green")
+            Print(out, "")
+
     else:
-        Print(out, "Результат: ")
-        Print(out, "SUCCESSFUL", color="green")
-        Print(out, "")
+        Print(out, "Выходных линий питания нет на данной плате")
 
     ctd1620.Connect()

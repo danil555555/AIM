@@ -1,3 +1,4 @@
+# -*- coding: cp1251 -*-
 import cv2
 from pylibdmtx import pylibdmtx
 from playsound import playsound
@@ -6,7 +7,7 @@ from playsound import playsound
 old_moduleName = ''
 old_DNP = ''
 
-IsScanned = '../Resource/IsScanned.mp3'
+IsScanned = r'/Resource/IsScanned.mp3'
 
 def ManualInput(name):
     NAME = input('¬ведите NAME: ')
@@ -53,7 +54,7 @@ def ScanDataMatrix(name):
                 cv2.destroyAllWindows()
                 #print(barCode)
                 lines = barCode.split(',')
-                #playsound(IsScanned)
+                playsound(IsScanned)
                 print()
                 return { "Name": lines[0], "DNP": lines[1], "SN": lines[2] }
 

@@ -1,3 +1,4 @@
+# -*- coding: cp1251 -*-
 import struct
 import numpy as np
 from eeprom.eeprom import GetCalibParam

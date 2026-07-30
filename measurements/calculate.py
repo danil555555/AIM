@@ -1,3 +1,4 @@
+# -*- coding: cp1251 -*-
 def CalcSafeOffsetsGen(moduleUMin, moduleUMax, moduleInput, Delta):
     """
     Рассчитывает безопасные напряжения:

@@ -1,3 +1,4 @@
+# -*- coding: cp1251 -*-
 from serial import Serial
 import time
 
@@ -11,29 +12,31 @@ class QJE:
         self.serial = Serial(self.port, 9600, timeout=1)
         time.sleep(1)
 
-        print(f"QJ3003P подключен: {self.port}")
+        #print(f"QJ3003P ?????????: {self.port}")
 
     def Disconnect(self):
 
         if self.serial and self.serial.is_open:
             self.serial.close()
 
-        print("QJ3003P отключен")
+        print("QJ3003P ????????")
 
     def Write(self, command):
-        self.serial.write(command.encode())
-        print(f"Отправлено: {command}")
+        self.serial.write(command)
+        self.serial.flush()
+        #print(f"??????????: {command}")
 
     def SetVoltage(self, voltage):
-        self.Write(f"VSET1:{voltage:.2f}")
+        self.Write(f"VSET1:{voltage:05.2f}\\r\\n".encode())
 
     def SetCurrent(self, current):
-        self.Write(f"ISET1:{current:.3f}")
+        self.Write(f"ISET1:{current:05.3f}\\r\\n".encode())
     
-    def PowerOn(self):
-        self.Write("OUTPUT1")
-        print("Питание включено")
+    def OutputOn(self):
+        self.Write("OUTPUT1\\r\\n".encode())
+        print("??????? ????????")
 
-    def PowerOff(self):
-        self.Write("OUTPUT0")
-        print("Питание отключено")
+    def OutputOff(self):
+        self.Write("OUTPUT0\\r\\n".encode())
+        print("??????? ?????????")
+

@@ -1,3 +1,4 @@
+# -*- coding: cp1251 -*-
 from measurements.measure import *
 from measurements.calculate import *
 from measurements.post_report import *

@@ -1,3 +1,4 @@
+# -*- coding: cp1251 -*-
 import serial, time, math
 
 class Agilent34401A:

@@ -1,3 +1,4 @@
+# -*- coding: cp1251 -*-
 import struct, sys
 import datetime
 import os
