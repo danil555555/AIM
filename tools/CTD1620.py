@@ -1,6 +1,110 @@
-# -*- coding: cp1251 -*-
+# -*- coding: utf-8 -*-
 import socket, struct, time, sys
 import datetime
+import atexit
+import logging
+import os
+import subprocess
+from logging.handlers import RotatingFileHandler
+
+
+LOG_FILE = os.path.abspath('ctd1620.log')
+logger = logging.getLogger('CTD1620')
+logger.setLevel(logging.DEBUG)
+logger.propagate = False
+
+if not logger.handlers:
+    log_handler = RotatingFileHandler(
+        LOG_FILE,
+        maxBytes=5 * 1024 * 1024,
+        backupCount=3,
+        encoding='utf-8',
+        delay=False,
+    )
+    log_handler.setFormatter(logging.Formatter(
+        '%(asctime)s.%(msecs)03d | %(levelname)s | %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+    ))
+    logger.addHandler(log_handler)
+
+
+_logConsoleProcess = None
+
+
+def _stopLogConsole():
+    global _logConsoleProcess
+    if _logConsoleProcess is not None and _logConsoleProcess.poll() is None:
+        try:
+            _logConsoleProcess.terminate()
+        except OSError:
+            pass
+    _logConsoleProcess = None
+
+
+def _startLogConsole():
+    global _logConsoleProcess
+
+    if os.name != 'nt':
+        return
+    if os.environ.get('CTD1620_LOG_CONSOLE', '1') == '0':
+        return
+    if _logConsoleProcess is not None and _logConsoleProcess.poll() is None:
+        return
+
+    escaped_path = LOG_FILE.replace("'", "''")
+    powershell_command = (
+        "$Host.UI.RawUI.WindowTitle='CTD1620 communication log'; "
+        "Write-Host 'CTD1620 log: {}'; "
+        "Get-Content -LiteralPath '{}' -Wait"
+    ).format(LOG_FILE, escaped_path)
+
+    try:
+        _logConsoleProcess = subprocess.Popen(
+            [
+                'powershell.exe',
+                '-NoLogo',
+                '-NoProfile',
+                '-ExecutionPolicy',
+                'Bypass',
+                '-Command',
+                powershell_command,
+            ],
+            creationflags=subprocess.CREATE_NEW_CONSOLE,
+        )
+    except OSError:
+        logger.exception('LOG_CONSOLE failed to start')
+
+
+atexit.register(_stopLogConsole)
+_startLogConsole()
+
+
+def _hexPreview(data, limit=64):
+    if not data:
+        return '-'
+    preview = ' '.join('{:02x}'.format(value) for value in data[:limit])
+    if len(data) > limit:
+        preview += ' ...'
+    return preview
+
+
+def _commandCaller():
+    try:
+        frame = sys._getframe(1)
+        this_file = os.path.abspath(__file__)
+        while frame is not None:
+            if os.path.abspath(frame.f_code.co_filename) != this_file:
+                break
+            frame = frame.f_back
+        if frame is None:
+            return 'unknown'
+        return '{}:{}:{}'.format(
+            os.path.basename(frame.f_code.co_filename),
+            frame.f_lineno,
+            frame.f_code.co_name,
+        )
+    except (AttributeError, ValueError):
+        return 'unknown'
 
 
 #------------------------------------------------------------------------------
@@ -209,7 +313,7 @@ class BlockParameters:
 
 #------------------------------------------------------------------------------
     def parameters(self, data, channel, param):
-        # Защита: если данных вообще нет (массив пустой), возвращаем его как есть
+        # Р—Р°С‰РёС‚Р°: РµСЃР»Рё РґР°РЅРЅС‹С… РІРѕРѕР±С‰Рµ РЅРµС‚ (РјР°СЃСЃРёРІ РїСѓСЃС‚РѕР№), РІРѕР·РІСЂР°С‰Р°РµРј РµРіРѕ РєР°Рє РµСЃС‚СЊ
         if not data:
             return data
             
@@ -217,17 +321,17 @@ class BlockParameters:
             if param < 0:
                 return data
             else:
-                # Фильтрация: берем 'param' по всем каналам, игнорируя слишком короткие каналы
+                # Р¤РёР»СЊС‚СЂР°С†РёСЏ: Р±РµСЂРµРј 'param' РїРѕ РІСЃРµРј РєР°РЅР°Р»Р°Рј, РёРіРЅРѕСЂРёСЂСѓСЏ СЃР»РёС€РєРѕРј РєРѕСЂРѕС‚РєРёРµ РєР°РЅР°Р»С‹
                 return [ch[param] for ch in data if len(ch) > param]
         else:
-            # Защита: проверяем, существует ли запрашиваемый канал в массиве
+            # Р—Р°С‰РёС‚Р°: РїСЂРѕРІРµСЂСЏРµРј, СЃСѓС‰РµСЃС‚РІСѓРµС‚ Р»Рё Р·Р°РїСЂР°С€РёРІР°РµРјС‹Р№ РєР°РЅР°Р» РІ РјР°СЃСЃРёРІРµ
             if channel >= len(data):
-                return [] # Или можно возвращать None / вызывать ошибку
+                return [] # РР»Рё РјРѕР¶РЅРѕ РІРѕР·РІСЂР°С‰Р°С‚СЊ None / РІС‹Р·С‹РІР°С‚СЊ РѕС€РёР±РєСѓ
                 
             if param < 0:
                 return data[channel]
             else:
-                # Защита: проверяем, существует ли параметр внутри этого канала
+                # Р—Р°С‰РёС‚Р°: РїСЂРѕРІРµСЂСЏРµРј, СЃСѓС‰РµСЃС‚РІСѓРµС‚ Р»Рё РїР°СЂР°РјРµС‚СЂ РІРЅСѓС‚СЂРё СЌС‚РѕРіРѕ РєР°РЅР°Р»Р°
                 if param >= len(data[channel]):
                     return None
                 return data[channel][param]
@@ -428,18 +532,31 @@ class CTD1620:
         self.port2 = 30002
         self.isConnected = False
         self.mode = 1
+        logger.info('CREATE ip=%s mode=%s', self.ip, self.mode)
 
 #------------------------------------------------------------------------------
     def SetServerMode(self, mode):
+        logger.info(
+            'SET_MODE requested=%s connected=%s current=%s',
+            mode, self.isConnected, self.mode,
+        )
         if self.isConnected:
+            logger.warning('SET_MODE rejected: device is connected')
             return False
         if mode in self.Modes:
             self.mode = mode
+            logger.info('SET_MODE success mode=%s', self.mode)
             return True
+        logger.warning('SET_MODE rejected: invalid mode=%s', mode)
         return False
 
 #------------------------------------------------------------------------------
     def Connect(self):
+        started = time.monotonic()
+        logger.info(
+            'CONNECT start ip=%s port1=%s port2=%s mode=%s',
+            self.ip, self.port1, self.port2, self.mode,
+        )
         self.sock1 = socket.socket()
         self.sock2 = socket.socket()
         try: 
@@ -449,47 +566,85 @@ class CTD1620:
             if self.mode == 2:
                 self.sock2.connect((self.ip, self.port2))
             self.isConnected = True
+            logger.info(
+                'CONNECT success ip=%s elapsed=%.3f',
+                self.ip, time.monotonic() - started,
+            )
             return True
-        except TimeoutError as err:
-            logger.error({"message": err.message})
-            return False
-        except Exception as err:
+        except Exception:
+            self.isConnected = False
+            logger.exception(
+                'CONNECT failed ip=%s elapsed=%.3f',
+                self.ip, time.monotonic() - started,
+            )
             return False
 
 #------------------------------------------------------------------------------
     def Disconnect(self):
-        self.sock1.close()
-        self.sock2.close()
-        self.isConnected = False
+        logger.info('DISCONNECT start ip=%s connected=%s', self.ip, self.isConnected)
+        try:
+            self.sock1.close()
+            self.sock2.close()
+            self.isConnected = False
+            logger.info('DISCONNECT success ip=%s', self.ip)
+        except Exception:
+            self.isConnected = False
+            logger.exception('DISCONNECT failed ip=%s', self.ip)
+            raise
 
 #------------------------------------------------------------------------------
     def Command(self, command, data=b'', timeout=0.1):
-        sock = self.sock1
-        if (self.mode == 2) and (command in self.Commands2):
-            sock = self.sock2
-        size = 4 + len(data) 
-        transmit = struct.pack('<4sl4s', b'SND>', size, str.encode(command))
-        if size > 4:
-            transmit += data
-        sock.send(transmit)
-        time.sleep(timeout)
-        ans = sock.recv(8)
-        if len(ans) != 8:
-            raise IOError('Error header size')
-        ans = struct.unpack('<4sl', ans)
-        if ans[0] != b'ANS>':
-            raise IOError('Error header magic number')
-        size = ans[1]
-        ansv = b''
-        while size > 0:
-            tmp = sock.recv(4096)
-            size_tmp = len(tmp)
-            if size_tmp == 0:
-                raise IOError('Error data size')
-            size -= size_tmp
-            ansv += tmp
+        started = time.monotonic()
+        caller = _commandCaller()
+        logger.debug(
+            'REQUEST command=%s caller=%s connected=%s mode=%s '
+            'data_size=%s data_hex=%s timeout=%.3f',
+            command, caller, self.isConnected, self.mode,
+            len(data), _hexPreview(data), timeout,
+        )
+        try:
+            sock = self.sock1
+            socket_number = 1
+            if (self.mode == 2) and (command in self.Commands2):
+                sock = self.sock2
+                socket_number = 2
+            size = 4 + len(data)
+            transmit = struct.pack('<4sl4s', b'SND>', size, str.encode(command))
+            if size > 4:
+                transmit += data
+            sock.send(transmit)
+            time.sleep(timeout)
+            ans = sock.recv(8)
+            if len(ans) != 8:
+                raise IOError('Error header size')
+            ans = struct.unpack('<4sl', ans)
+            if ans[0] != b'ANS>':
+                raise IOError('Error header magic number')
+            size = ans[1]
+            ansv = b''
+            while size > 0:
+                tmp = sock.recv(4096)
+                size_tmp = len(tmp)
+                if size_tmp == 0:
+                    raise IOError('Error data size')
+                size -= size_tmp
+                ansv += tmp
 
-        return ansv
+            logger.debug(
+                'RESPONSE command=%s caller=%s socket=%s response_size=%s '
+                'response_hex=%s elapsed=%.3f',
+                command, caller, socket_number, len(ansv),
+                _hexPreview(ansv), time.monotonic() - started,
+            )
+            return ansv
+        except Exception:
+            logger.exception(
+                'COMMAND_ERROR command=%s caller=%s connected=%s '
+                'elapsed=%.3f',
+                command, caller, self.isConnected,
+                time.monotonic() - started,
+            )
+            raise
 
 #------------------------------------------------------------------------------
     def ReadEPROM(self, slotType, slotNumber, recordNumber):

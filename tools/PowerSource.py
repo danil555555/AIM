@@ -12,19 +12,19 @@ class QJE:
         self.serial = Serial(self.port, 9600, timeout=1)
         time.sleep(1)
 
-        #print(f"QJ3003P ?????????: {self.port}")
+        #print(f"QJ3003P подключен: {self.port}")
 
     def Disconnect(self):
 
         if self.serial and self.serial.is_open:
             self.serial.close()
 
-        print("QJ3003P ????????")
+        print("QJ3003P отключен")
 
     def Write(self, command):
         self.serial.write(command)
         self.serial.flush()
-        #print(f"??????????: {command}")
+        #print(f"Отправлено: {command}")
 
     def SetVoltage(self, voltage):
         self.Write(f"VSET1:{voltage:05.2f}\\r\\n".encode())
@@ -34,9 +34,9 @@ class QJE:
     
     def OutputOn(self):
         self.Write("OUTPUT1\\r\\n".encode())
-        print("??????? ????????")
+        print("Питание включено")
 
     def OutputOff(self):
         self.Write("OUTPUT0\\r\\n".encode())
-        print("??????? ?????????")
+        print("Питание отключено")
 

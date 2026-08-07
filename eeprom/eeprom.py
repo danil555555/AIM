@@ -133,7 +133,11 @@ def WriteCalibrate(out, ctd1620, fileName, calbGain, calbOffset):
     Print(out, "SUCCESSFUL")
     Print(out, "")
     ctd1620.Restart(TIMEOUT_RESTART)
-
+    time.sleep(2)
+    ctd1620.Disconnect()
+    time.sleep(2)
+    if not ctd1620.Connect():
+        raise ConnectionError("Not connect to ctd")
 
 
 #------------------------------------------------------------------------------
@@ -247,10 +251,12 @@ def ReadCalibrate(data):
     return date, np.array(gains), np.array(offsets)
 
 def GetCalibParam(out, ctd1620, SlotNumber, moduleName):
-    
+
     REFERENCE_OFFSETS = {
     "AIM-812": 12100.0,
     "AIM-813": -12100.0,
+    "AIM-413": -12100.0,
+    "AIM-411": 0.0,
     "AIM-801": 0.0,
     "AIM-804": 0.0,
     }
@@ -272,7 +278,7 @@ def GetCalibParam(out, ctd1620, SlotNumber, moduleName):
              f"{'Offset, mV':>12} | "
              f"{'Result':>10} | "
              )
-        
+
         Print(out, header)
         Print(out, "-" * len(header))
         result = []
@@ -297,8 +303,11 @@ def GetCalibParam(out, ctd1620, SlotNumber, moduleName):
             f"{oldOffset[i]:>14.3f} | "
             f"{result[i]:>10} | "
             )
+            if(result[i] == "OK"):
+                Print(out, line, color = "green")
+            else:
+                Print(out, line, color = "red")
 
-            Print(out, line)
             Print(out, "-" * len(header))
             
         if all(value == "OK" for value in result):

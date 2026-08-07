@@ -15,12 +15,11 @@ def RunCalibrationAIM(context: object) -> bool:
     moduleUMax = context["moduleUMax"]
     fileName = context["fileName"]
     Delta = 0.2
-
     first_start = True
     old_moduleName = ''
     old_DNP = ''
     IsScanned = '../Resource/IsScanned.mp3'
-
+    ctd1620.Connect()
     np.set_printoptions(formatter={'float': '{: 0.3f}'.format})
 
     SayFailed = '../Resource/TestIsFailed.mp3'
@@ -31,27 +30,23 @@ def RunCalibrationAIM(context: object) -> bool:
     OffsetMax, OffsetMin, Offset, Delta = CalcSafeOffsetsGen(moduleUMin, moduleUMax, moduleInput, Delta)
 
     #CheckOutputLines(logfile, ctd1620, agilent, moduleType, moduleChannels, fileName)
-    LogBlockStart(logfile, "?????????? ?????")
-    Print(logfile, "????? ?????????? ?????".center(75, '-'))
+    LogBlockStart(logfile, "Калибровка")
+    Print(logfile, "Удаление коэф".center(75, '-'))
     # Reset calibration
     calbGain = np.ones(moduleChannels, dtype=float)
     calbOffset = np.zeros(moduleChannels, dtype=float)
     WriteCalibrate(logfile, ctd1620, fileName, calbGain, calbOffset)
 
     generator.SetupChannel(1, wform='DC')
-    agilent.ConnectChan(9)  # ???????? ? 9 ??????? ??? ????????? ???????? ?????????? ???????? ? ??????????
+    agilent.ConnectChan(9)  
     agilent.SetMeasurement("VOLT:DC")
 
-    mult_high_volt_1, aim_high_volt_1 = MeasurePointAIM(logfile, ctd1620, agilent, generator, moduleChannels, OffsetMax, Delta, "????????? 1: ??????? ????? ??????????")
-    mult_low_volt_2, aim_low_volt_2 = MeasurePointAIM(logfile, ctd1620, agilent, generator, moduleChannels, OffsetMin, Delta, "????????? 2: ?????? ????? ??????????")
+    mult_high_volt_1, aim_high_volt_1 = MeasurePointAIM(logfile, ctd1620, agilent, generator, moduleChannels, OffsetMax, Delta, "Верхняя точка калибровки")
+    mult_low_volt_2, aim_low_volt_2 = MeasurePointAIM(logfile, ctd1620, agilent, generator, moduleChannels, OffsetMin, Delta, "Нижняя точка калибровки")
 
     result = CalcCoefCalibration(logfile, ctd1620, fileName, mult_high_volt_1, mult_low_volt_2, aim_high_volt_1, aim_low_volt_2)
-
+    ctd1620.Disconnect()
     LogBlockEnd(logfile)
-    if result == True:
-        playsound(SaySuccessful)
-    else:
-        playsound(SayFailed)
     return result
     #in3 = CheckDcMeasureAIM(logfile, ctd1620, agilent, generator, moduleChannels, Offset, Delta, moduleInput)
     #in4 = CheckAcMeasureAIM(logfile, ctd1620, agilent, generator, moduleChannels, Offset, Delta)

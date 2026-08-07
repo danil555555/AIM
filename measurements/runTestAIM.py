@@ -17,10 +17,11 @@ def RunTestAIM(context):
     fileName = context["fileName"]
     Delta = 0.2
     testIsOk = True
+    ctd1620.Connect()
 
     OffsetMax, OffsetMin, Offset, Delta = CalcSafeOffsetsGen(moduleUMin, moduleUMax, moduleInput, Delta)
     LogBlockStart(logfile, "Тестирование платы")
-    CheckOutputLines(logfile, ctd1620, agilent, moduleType, moduleChannels, fileName)
+    #CheckOutputLines(logfile, ctd1620, agilent, moduleType, moduleChannels, fileName)
 
     generator.SetupChannel(1, wform='DC')
     agilent.ConnectChan(9)  # Работаем с 9 каналом для измерений текущего напряжения напрямую с генератора
@@ -44,8 +45,8 @@ def RunTestAIM(context):
     #Print(logfile, "End".center(75, '-'))
     #logfile.close()
 
-    #ctd1620.Disconnect()
 
+    ctd1620.Disconnect()
    # Отправка лога и двоичного файла на ftp сервер
     post_report(fileName+'.log')
     #post_report(fileName+'.calb')
@@ -63,5 +64,5 @@ def RunTestAIM(context):
         playsound(SaySuccessful)
     else:
         playsound(SayFailed)
-    
+
     return testIsOk

@@ -129,7 +129,8 @@ class Agilent34401A:
         self.SetMeasurementFunction(mode)
         self.SetAutoRange(mode)
         self.SetAverageState(mode, False)
-        self.SetNPLC(mode, 10)
+        if mode == "VOLT:DC":
+            self.SetNPLC(mode, 10)
         self.SetContinue(False)
 #------------------------------------------------------------------------------
     def ConnectChan(self,n): # Connect channel to DMM

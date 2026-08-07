@@ -7,7 +7,7 @@ from measurements.printInfo import *
 
 SlotNumber = 0
 
-def PrepareStand(agilent, generator, first_start, old_moduleName):
+def PrepareStand(agilent, generator, psu, first_start, old_moduleName):
 
     SlotNumber = 0
     print("")
@@ -19,6 +19,12 @@ def PrepareStand(agilent, generator, first_start, old_moduleName):
     print()
     print("Подключение платы AIM-XXX".center(40, '='))
     WaitPressEnter("1. Вставьте плату, подключите AUX\n2. Нажмите Enter")
+    psu.SetVoltage(24)
+    time.sleep(1)
+    psu.SetCurrent(1)
+    time.sleep(1)
+    psu.OutputOn()
+    time.sleep(20)
     #print("Подключение к CTD-1620")
     ctd1620 = CTD1620("10.0.0.2")
     ctd1620.Connect()
@@ -45,10 +51,8 @@ def PrepareStand(agilent, generator, first_start, old_moduleName):
         fileName,
         logfile
     ) = PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName)
- # Если инфо есть проверить соотвесиве с Qr, если не согласуется дать варианты действия - перезаписать или прекратить 
- # если инфа есть ее можно оставить, или имя серийник dnp
-# если нет инфы идем штатно  
 
+    ctd1620.Disconnect()
 
     context = {
         "AIM": AIM,
