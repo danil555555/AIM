@@ -58,7 +58,7 @@ def RunTestAIM(context):
     ctd1620.Disconnect()
    # Отправка лога и двоичного файла на ftp сервер
     post_report(fileName+'.log')
-    post_report(fileName+'.calb')
+    #post_report(fileName+'.calb')
 
    #Учет результатов проверки
     if(checkDcMeasureResult == "OK" and 
