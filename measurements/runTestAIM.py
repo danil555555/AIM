@@ -52,7 +52,7 @@ def RunTestAIM(context):
     
     LogBlockEnd(logfile)
     Print(logfile, "End".center(75, '-'))
-    logfile.close()
+    #logfile.close()
 
 
     ctd1620.Disconnect()

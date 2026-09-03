@@ -140,7 +140,6 @@ def main() -> None:
                 time.sleep(1)
                 psu.SetCurrent(0)
                 print("Завершение работы")
-                powerSource.PowerOff()
                 return
 
     except KeyboardInterrupt:
