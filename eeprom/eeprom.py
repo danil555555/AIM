@@ -328,7 +328,9 @@ def GetCalibParam(out, ctd1620, SlotNumber, moduleName):
 
 
 def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):  
+
     #есть вопросы
+    
     """
     Читает/обновляет EEPROM платы, получает параметры модуля,
     загружает тестовую конфигурацию при первом запуске.
@@ -458,37 +460,35 @@ def PrepareModuleInfo(ctd1620, SlotNumber, AIM, first_start, old_moduleName):
 
         #ctd1620.HWRestart()
 
-    # 6. Проверка, что серия плат одного типа
-    
-    print("Проверка текущий платы на совпадение типа".center(40,"="))
-    if not first_start and (moduleType != old_moduleName):
-       quit("Плата не соответствует первой плате серии\n" + "Первая плата: " + str(old_moduleName)
-            + "\nТекущая плата: "
-            + str(moduleType)
-        )
-    else:
-       if first_start:
-           print("Первый запуск cтенда")
-       else:
-           print("Плата соответствует серии первой платы")
-       old_moduleName = moduleType
-       old_DNP = moduleDNP
-       if first_start:
-          
-          conffile = './' + moduleType + '/' + moduleType + '.Calibration.xml'
-          Ini_conf = conv_cfg_mem.XmlToIni(conffile)
-          test = ctd1620.Command('STCF', str.encode(Ini_conf), 4) # Загрузка конфигурации
-          if not test:
-              quit('Не могу загрузить в цифровую плату тестовую конфигурацию')
-          else:
-              print('Тестовая конфигуация загружена')
+    # 6. При смене типа платы загружаем конфигурацию нового типа.
+    print("Проверка типа текущей платы".center(40, "="))
+    type_changed = not first_start and moduleType != old_moduleName
 
-          res=ctd1620.FixHardwareConfig()
-          if not res:
-             quit('Не могу зафиксировать аппаратную конфигурацию')
-          else:
-             print('Аппаратная конфигурация зафиксирована')
-             first_start = False
+    if first_start:
+        print("Первый запуск стенда")
+    elif type_changed:
+        print("Тип платы изменён: " + str(old_moduleName) + " -> " + str(moduleType))
+        print("Загрузка конфигурации для нового типа платы")
+    else:
+        print("Плата соответствует текущему типу серии")
+
+    old_moduleName = moduleType
+    old_DNP = moduleDNP
+
+    if first_start or type_changed:
+        conffile = './' + moduleType + '/' + moduleType + '.Calibration.xml'
+        Ini_conf = conv_cfg_mem.XmlToIni(conffile)
+        test = ctd1620.Command('STCF', str.encode(Ini_conf), 4)
+        if not test:
+            quit('Не могу загрузить в цифровую плату тестовую конфигурацию')
+
+        print('Тестовая конфигурация загружена')
+        res = ctd1620.FixHardwareConfig()
+        if not res:
+            quit('Не могу зафиксировать аппаратную конфигурацию')
+
+        print('Аппаратная конфигурация зафиксирована')
+        first_start = False
              
     print("".center(40,"="))
     print("")
