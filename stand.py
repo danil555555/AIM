@@ -24,8 +24,9 @@ def PrepareStand(agilent, generator, psu, first_start, old_moduleName):
     psu.SetCurrent(1)
     time.sleep(1)
     psu.OutputOn()
+    print("Подключение к CTD-1620")
     time.sleep(20)
-    #print("Подключение к CTD-1620")
+
     ctd1620 = CTD1620("10.0.0.2")
     ctd1620.Connect()
     #print("Подключение к CTD-1620 выполнено успешно")

@@ -1,6 +1,9 @@
 # -*- coding: cp1251 -*-
 import serial, time, math
 
+class AgilentReadError(Exception):
+    """Не удалось получить корректное показание мультиметра."""
+
 class Agilent34401A:
 
     MeasurementFunctions = [
@@ -119,11 +122,43 @@ class Agilent34401A:
 
 #------------------------------------------------------------------------------
     def Read(self):
-        readline = self.scpi_comm("READ?")
-        if len(readline) < 16:
-            return math.inf
-        return readline.split(',')[0][0:15]
+        try:
+            response = self.scpi_comm("READ?").strip()
+        except (serial.SerialException, UnicodeDecodeError) as error:
+            print(
+                f"Ошибка связи с мультиметром: {error}"
+            )
+            return None
 
+        if not response:
+            print(
+                "Мультиметр не ответил за отведённое время"
+            )
+            return None
+
+        raw_value = response.split(',')[0][0:15]
+
+        try:
+            value = float(raw_value)
+        except ValueError:
+            print(
+                f"Некорректный ответ мультиметра: {response!r}"
+            )
+            return None
+
+        if not math.isfinite(value):
+            print(
+                f"Мультиметр вернул недопустимое значение: {value}"
+            )
+            return None
+
+        return value
+
+        # readline = self.scpi_comm("READ?")
+        # if len(readline) < 16:
+        #     return math.inf
+        # return readline.split(',')[0][0:15]
+    
 #------------------------------------------------------------------------------
     def SetMeasurement(self, mode):
         self.SetMeasurementFunction(mode)
@@ -181,5 +216,3 @@ class Agilent34401A:
              res.append(fl_input)
        self.serial.write(str.encode("*RST\n")) # Disable scan
        return res  
-    
-

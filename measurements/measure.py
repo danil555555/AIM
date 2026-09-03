@@ -2,6 +2,8 @@
 import numpy as np
 import time
 import math
+import serial
+from tools.Agilent34401A import AgilentReadError
 from measurements.post_report import *
 from measurements.printInfo import *
 from playsound import playsound
@@ -12,7 +14,29 @@ IsScanned = r'./Resource/IsScanned.mp3'
 SayFailed = r'./Resource/TestIsFailed.mp3'
 SaySuccessful = r'./Resource/TestIsSuccessful.mp3'
 
-def MeasureMovingAverage(ctd1620, agilent, channels, average=1, delta=0.1, param=0):
+def read_mult(agilent, attempts=3, delay=0.2):
+    for attempt in range(1, attempts + 1):
+        value = agilent.Read()
+
+        if value is not None:
+            return value
+
+        print(
+            f"Повтор чтения мультиметра: "
+            f"{attempt}/{attempts}"
+        )
+
+        if attempt < attempts:
+            time.sleep(delay)
+
+    print(
+        "Предупреждение: не удалось получить "
+        "показание мультиметра"
+    )
+
+    return None
+
+def Measure(ctd1620, agilent, channels, average=1, delta=0.1, param=0):
     #ctd1620-для чтения V,agilent - для чтения V,channels - для списка ctd1620
     avrVoltage = 0.0
     avrParams = np.zeros(channels) #напряжение на pcm1620 
@@ -23,7 +47,10 @@ def MeasureMovingAverage(ctd1620, agilent, channels, average=1, delta=0.1, param
 
     if (average == 1):
         BP = ctd1620.GetBlockParameters()
-        avrVoltage = 1000.0*float(agilent.Read()) #чтение показаний мультиметра
+        avrVoltage = 1000.0 * read_mult(agilent) #чтение показаний мультиметра
+        if avrVoltage is None:
+            print("Нет данных мультиметра. Измерение остановлено. Перезагрузите мультиметр.")
+            return None, None
         avrParams = np.array(BP.VibroParameters(param=param)[0:channels])
         #avrParams - получаем из цифровой платы pcm1620
         return (avrVoltage, avrParams) #(out, in)
@@ -32,8 +59,15 @@ def MeasureMovingAverage(ctd1620, agilent, channels, average=1, delta=0.1, param
     ret = 1
     while True: #цикл измерений
         i += 1
+        if i > 50:
+            print("Ошибка усреднения значения.")
+            return None, None
         BP = ctd1620.GetBlockParameters()
-        avrVoltage += 1000.0*float(agilent.Read())
+        mult_value = read_mult(agilent)
+        if mult_value is None:
+            print("Нет данных мультиметра. Измерение остановлено.")
+            return None, None
+        avrVoltage += 1000.0 * float(mult_value)
         params = BP.VibroParameters(param=param)[0:channels]
         avrParams += params
         koef = 1.0 / float(i)
@@ -42,6 +76,9 @@ def MeasureMovingAverage(ctd1620, agilent, channels, average=1, delta=0.1, param
         dVoltage = abs(tmpVoltage - tmpVoltageOld)  #изменение out
         dParams  = abs(tmpParams - tmpParamsOld) #изменение in
         ret = max(dVoltage, max(dParams)) #максимальное изменение in или out
+        print(f"\rУсреднение измерений " + str(i) + ": " + f"{ret:.3f}    ", end = '', flush=True)
+        time.sleep(1)
+        #print("\r" + " " * 75 + "\r", end='', flush = True )
         #txt = "Average " + str(i) + " (" + "{0:.3f}".format(ret) + ")"
         #print(txt.ljust(24,' '), end='\r')
         if (ret < delta) and (i >= average): #условие выхода из цикла
@@ -55,159 +92,6 @@ def MeasureMovingAverage(ctd1620, agilent, channels, average=1, delta=0.1, param
     return (tmpVoltage, tmpParams) #(out, in)
     #out - мультиметр (float), in - блок с платами ctd1620 (array)
 
-def Measure_test(ctd1620, agilent, channels, average=1, delta=0.1, param=0):
-    print("Зашли в измерения")
-    counter = 0
-    aim_volt = np.zeros(channels)
-    window_aim_volt = []
-    window_mult_volt = []
-    print("Ожидание стабилизации...")
-    for i in range(average):
-        print("читаем параметры с аим")
-        BP = ctd1620.GetBlockParameters()
-        aim_volt = np.array(BP.VibroParameters(param=param)[0:channels])
-        window_aim_volt.append(aim_volt)
-
-
-    while True:
-        counter += 1
-        if counter > 1:
-            print(f"Попытка {counter}: измерения продолжаются...")
-        mean_volt_aim = np.mean(window_aim_volt, axis=0)
-        window_aim_volt.pop(0)
-
-        BP = ctd1620.GetBlockParameters()
-        aim_volt = np.array(BP.VibroParameters(param=param)[0:channels])
-        window_aim_volt.append(aim_volt)
-        mean_volt_aim_new = np.mean(window_aim_volt, axis=0)
-        print(f"Последнее измерение: {aim_volt}, Среднее по окну: {mean_volt_aim}")
-        if np.max(np.abs(mean_volt_aim_new - mean_volt_aim)) <= delta:
-            print("Вышли из измерения")
-            mult = 1000.0*float(agilent.Read())
-            return mult, mean_volt_aim_new
-        
-        if counter > 10:
-            print("Измерения не стабильны, превышено количество попыток.")
-            return (None, None)
-
-def Measure( ctd1620, agilent, channels, average=10, delta=0.1, param=0, max_attempts=100,):
-
-    print("Зашли в измерения")
-    print("Ожидание стабилизации...")
-
-    window_aim_volt = []
-    window_mult_volt = []
-
-    agilent.Read()
-
-    for i in range(average):
-        BP = ctd1620.GetBlockParameters()
-
-        aim_volt = np.asarray(
-            BP.VibroParameters(param=param)[:channels],
-            dtype=float,
-        )
-
-        mult_volt = 1000.0 * float(agilent.Read())
-
-        window_aim_volt.append(aim_volt)
-        window_mult_volt.append(mult_volt)
-
-        print(
-            f"Заполнение окна {i + 1}/{average}: "
-            f"Mult={mult_volt:.3f}, AIM={aim_volt}"
-        )
-
-    for counter in range(1, max_attempts + 1):
-        # Среднее предыдущего окна.
-        mean_aim_old = np.mean(
-            window_aim_volt,
-            axis=0,
-        )
-
-        mean_mult_old = float(
-            np.mean(window_mult_volt)
-        )
-
-
-        window_aim_volt.pop(0)
-        window_mult_volt.pop(0)
-
-
-        BP = ctd1620.GetBlockParameters()
-
-        aim_volt = np.asarray(
-            BP.VibroParameters(param=param)[:channels],
-            dtype=float,
-        )
-
-        mult_volt = 1000.0 * float(agilent.Read())
-
-        window_aim_volt.append(aim_volt)
-        window_mult_volt.append(mult_volt)
-
-        # Среднее обновлённого окна.
-        mean_aim_new = np.mean(
-            window_aim_volt,
-            axis=0,
-        )
-
-        mean_mult_new = float(
-            np.mean(window_mult_volt)
-        )
-
-        # Изменение среднего AIM относительно предыдущего окна.
-        aim_change = float(
-            np.max(
-                np.abs(mean_aim_new - mean_aim_old)
-            )
-        )
-
-        # Изменение среднего мультиметра.
-        mult_change = abs(
-            mean_mult_new - mean_mult_old
-        )
-
-        # Разница каждого канала AIM с мультиметром.
-        channel_errors = np.abs(
-            mean_aim_new - mean_mult_new
-        )
-
-        max_error = float(
-            np.max(channel_errors)
-        )
-
-        print(
-            f"Попытка {counter}: "
-            f"Mult={mean_mult_new:.3f}, "
-            f"AIM={mean_aim_new}"
-        )
-        print(
-            f"Ошибки каналов: {channel_errors}, "
-            f"максимальная ошибка: {max_error:.3f}"
-        )
-        print(
-            f"Изменение AIM: {aim_change:.3f}, "
-            f"изменение Mult: {mult_change:.3f}"
-        )
-
-        # Окно стабильно, и каждый канал отличается от
-        # мультиметра не более чем на delta.
-        if (
-            aim_change <= delta
-            and mult_change <= delta
-            and max_error <= delta
-        ):
-            print("Вышли из измерения")
-            return mean_mult_new, mean_aim_new
-
-    print(
-        "Измерения не удовлетворяют допуску, "
-        "превышено количество попыток."
-    )
-
-    return None, None
-
 def WaitStable(ctd1620, agilent, channels, delta=0.2, param=0):
     #функция ожидания, пока измерения не станут стабильными
     out1, in1 = Measure(ctd1620, agilent, channels) #первое измерение
@@ -215,13 +99,16 @@ def WaitStable(ctd1620, agilent, channels, delta=0.2, param=0):
     i = 0
     while True:
         i += 1 # out2,in2 - Новые измерения, уже с параметром
+        if i > 50:
+            print("Ошибка ожидания")
+            return
         out2, in2 = Measure(ctd1620, agilent, channels, param=param)
         #out1 = 0.9*out1 + 0.1*out2
         #in1  = 0.9*in1  + 0.1*in2
         dout = abs(out2 - out1) 
         din  = abs(in2 - in1)
         ret = max(dout, max(din))
-        #print("Стабилизация измерений " + str(i) + "... (" + "{0:.3f}".format(ret) + ")", end='\r')
+        print(f"\rCтабилизация измерений " + str(i) + ": " + f"{ret:.3f}   ", end='\r', flush=True)
         #Print(logfile, "Стабилизация измерений")
         if ret < delta: #максимальная погрешность в пределах допуска?
             print('')
@@ -280,22 +167,32 @@ def linescan(out,ag,n,lowthr,highthr,offset=0): # Сканирование напряжений линий
 
 
 
-def lineread(file,ag,n,inout=0,offset=0):
-   vl = np.zeros(n) 
+def lineread(file,ag,n,inout=0,offset=0, attempts=5):
+   values = np.zeros(n) 
    np.set_printoptions(formatter={'float': '{: 0.3f}'.format})
    for y in range(0,n):
+     
      ag.ConnectChan(offset+inout+y+1)
+     time.sleep(2)
+
      ag.SetContinue(False) 
      time.sleep(2)
-     ag.Read()
-     vah=ag.Read()
-     while isinstance(vah,float) and not math.isfinite(vah): 
-        vah = ag.Read()
-     vah = float(vah)
-     vl[y] = 1000.0*vah
-     #print("Value on chanel (",y+1,") is:", vl[y])
 
-   return vl
+     #ag.Read()   
+     for attempt in range(1, attempts+1):
+         value = ag.Read()
+         if value is None:
+             print(f"Измерить канал {y+1} не удалось, попытка {attempt}/{attempts}")
+             time.sleep(0.4)
+             continue
+         value = float(value)
+         print(f"\rИзмерение " + str(y+1) + ": " + f"{value}   ", end='\r', flush=True)
+         values[y] = 1000.0 * value
+         break
+     else:
+        return None
+   print("Измерения выполнены успешно     ")
+   return values
 
 
 #------------------------------------------------------------------------------
@@ -415,11 +312,15 @@ def CheckDcMeasureAIM(out, ctd1620, agilent, generator, moduleChannels, offsetGe
    Print(out, "Проверка измерения по постоянному току после калибровки".center(75, '-'))
    generator.SetOffset(offsetGen)
    time.sleep(3)
-   Print(out, "Параметры генератора: DC - " + f"{offsetGen}" + "V")
-   # Measure DC
    Print(out, "VOLT:DC")
-   #WaitStable(ctd1620, agilent, moduleChannels, delta=delta)
+   Print(out, "Параметры генератора: Offset = " + f"{offsetGen}" + "V")
+   # Measure DC
+
+   WaitStable(ctd1620, agilent, moduleChannels, delta=delta)
    out3, in3 = Measure(ctd1620, agilent, moduleChannels, average=10)
+   if (abs(abs(out3) - abs(offsetGen)) < 1):
+      print(f"Ошибка измерения, мультиметр должен измерить {offsetGen}")
+   
    if (moduleInput == "IEPE"):
       threshold_dc = 5.0
    else:
@@ -447,10 +348,10 @@ def CheckAcMeasureAIM(out, ctd1620, agilent, generator, moduleChannels, offsetGe
    agilent.SetMeasurement("VOLT:AC") #from agilent py
    generator.SetupChannel(1, freq = 160.0, ampl = 8.0, offset = offsetGen) #from TGA1240 py
    time.sleep(3) #from time
-   Print(out, "Параметры генератора: AC - Offset = " + f"{offsetGen}" + "V, " + "Freq = 160 Hz, " + "Ampl = 8 V, ")
-   # Measure AC
    Print(out, "VOLT:AC")
-   #WaitStable(ctd1620, agilent, moduleChannels, delta=delta, param=2) #local def
+   Print(out, "Параметры генератора: Offset = " + f"{offsetGen}" + "V, " + "Freq = 160 Hz, " + "Ampl = 8 V, ")
+   # Measure AC
+   WaitStable(ctd1620, agilent, moduleChannels, delta=delta, param=2) #local def
    out4, in4 = Measure(ctd1620, agilent, moduleChannels, average = 10, param=2) #local def
    #out - multimetr (float), in - pcm1620 (list of float)
    
@@ -478,12 +379,13 @@ def CheckDcMeasureAuxAim(out, agilent, generator, offsetGen, moduleChannels , in
    generator.SetOffset(offsetGen)
    time.sleep(3)
    Print(out, "Параметры генератора: DC - " + f"{offsetGen}" + "mV")
-   print("DC output check:")
    if (moduleType == 'AIM-211'):
      out5 = lineread(out,agilent,moduleChannels,inout=10,offset=6)
    else:
      out5 = lineread(out,agilent,moduleChannels, inout=10)
-
+   if out5 is None:
+       Print(out, "Ошибка, мультиметр не передал данные")
+       return "FAILED"
    result_7 = AuxMeasureResult(in3, out5, 50.0)
    PrintArrayCompareTable(out, "", in3, out5, result_7, 50.0)
 

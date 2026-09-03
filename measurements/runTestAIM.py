@@ -21,26 +21,35 @@ def RunTestAIM(context):
 
     OffsetMax, OffsetMin, Offset, Delta = CalcSafeOffsetsGen(moduleUMin, moduleUMax, moduleInput, Delta)
     LogBlockStart(logfile, "Тестирование платы")
-    #CheckOutputLines(logfile, ctd1620, agilent, moduleType, moduleChannels, fileName)
+    CheckOutputLines(logfile, ctd1620, agilent, moduleType, moduleChannels, fileName)
 
     generator.SetupChannel(1, wform='DC')
     agilent.ConnectChan(9)  # Работаем с 9 каналом для измерений текущего напряжения напрямую с генератора
     agilent.SetMeasurement("VOLT:DC")
 
     in3, checkDcMeasureResult = CheckDcMeasureAIM(logfile, ctd1620, agilent, generator, moduleChannels, Offset, Delta, moduleInput)
-
+    if checkDcMeasureResult == "FAILED":
+        playsound(SaySuccessful)
+        return False
    #-----------------------------------------------------
     in4, checkAcMeasureResult = CheckAcMeasureAIM(logfile, ctd1620, agilent, generator, moduleChannels, Offset, Delta)
-
+    if checkAcMeasureResult == "FAILED":
+        playsound(SaySuccessful)
+        return False
    #Проверка проверка буфферных выходов AIM на DC
    #-----------------------------------------------------
 
     checkDcMeasureAuxResult = CheckDcMeasureAuxAim(logfile, agilent, generator, Offset, moduleChannels, in3, moduleType)
-
+    if checkDcMeasureAuxResult == "FAILED":
+        playsound(SaySuccessful)
+        return False
    #Проверка проверка буфферных выходов AIM на AC
 
     checkAcMeasureAuxResult = CheckAcMeasureAuxAim(logfile, agilent, generator, Offset, moduleChannels, in4, moduleType)
-
+    if checkAcMeasureAuxResult == "FAILED":
+        playsound(SaySuccessful)
+        return False
+    
     LogBlockEnd(logfile)
     #Print(logfile, "End".center(75, '-'))
     #logfile.close()
@@ -48,7 +57,7 @@ def RunTestAIM(context):
 
     ctd1620.Disconnect()
    # Отправка лога и двоичного файла на ftp сервер
-    post_report(fileName+'.log')
+    #post_report(fileName+'.log')
     #post_report(fileName+'.calb')
 
    #Учет результатов проверки

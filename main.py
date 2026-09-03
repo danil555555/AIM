@@ -46,7 +46,10 @@ def moduleMenu(context: dict) -> str:
             RunTestAIM(context)
 
         elif choice == "2":
-            RunCalibrationAIM(context)
+            calibrateResult = RunCalibrationAIM(context)
+            
+            if calibrateResult:
+                RunTestAIM(context)
 
         elif choice == "3":
             return "CHANGE_MODULE"
